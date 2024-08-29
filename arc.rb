@@ -1,0 +1,7 @@
+fn[:car, :lst, `lst.first` ]
+fn[:cdr, :lst, `lst.drop(1)` ]
+fn[:int, :s, `s.to_i` ]
+fn[:each, [:args, :proc], `args.each { |item| proc[item] }` ]
+fn[:map, [:lst, :proc], `lst.map { |item| proc[item] }` ]
+fn[:max, [:lst], `lst.max` ]
+fn[:min, [:lst], `lst.min` ]
