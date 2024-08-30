@@ -46,22 +46,31 @@ class Array
     in Proc
       raise "The array-proc first element is a proc which is not an fn: #{fn.inspect}" unless (fn[] rescue false) && (fn[] in [Proc, Symbol])
       prc = fn[].first
-      prc[*remaining_args]
+      exec_proc(prc, remaining_args)
 
     in Symbol
       true_fn = global_variable_get("@#{fn}")
       raise "The array-proc first element is a symbol that does not refer to a valid fn: :#{fn}" unless (true_fn[] rescue false) && (true_fn[] in [Proc, Symbol])
       prc = true_fn[].first
-      prc[*remaining_args]
+      exec_proc(prc, remaining_args)
 
     in String if fn.to_s.start_with?(':')
       true_fn = global_variable_get(fn.sub(':', '@'))
       raise "The array-proc first element is a symbol that does not refer to a valid fn: #{fn}" unless (true_fn[] rescue false) && (true_fn[] in [Proc, Symbol])
       prc = true_fn[].first
-      prc[*remaining_args]
+      exec_proc(prc, remaining_args)
 
     else
       raise "The first element of the array-proc was a #{fn.class} which is not a symbol or a proc."
+    end
+  end
+
+  def exec_proc(prc, args)
+    if args.last in Proc
+      proc_arg = args.pop
+      prc[*args, &proc_arg]
+    else
+      prc[*args]
     end
   end
 

@@ -25,12 +25,24 @@
 #
 # TESTS:
 #
-# > string = -> (a,b) { a + b }; local_variable_set(:string, string);                  fn[:concat, [:a, :b], [ string, :a, :b ] ]; concat[ "first", "last" ]
+# string = -> (a,b) { a + b }; local_variable_set(:string, string);                   fn[:concat, [:a, :b], [ string, :a, :b ] ]; concat[ "first", "last" ]
 # => RuntimeError: The body of the fn includes a proc which is not an fn. The proc in here: [#<Proc>, :a, :b]
 # string = -> { [-> (a,b) { a + b }, :string ] }; local_variable_set(:string, string); fn[:concat, [:a, :b], [ string, :a, :b ] ]; concat[ "first", "last" ]
 # => [:string, "first", "last"]
+# string = -> { [-> (*args) { args.join }, :string ] }; local_variable_set(:string, string); fn[:concat, [:args], [ string, :args ] ]; concat[ "first", "middle", "last" ]
+# => [:string, "first", "middle", "last"]
+# => "firstmiddlelast"
+# plus => { [-> (:a, &proc) { proc[a] }, :plus ] }; local_variable_set(:plus, plus);
+# fn[:transform, [:list, :proc], [ eachdo, :args ] ]; transform[ [[1,2,3]] ] { it * 2 }
+#
 # fn[:concat, [:a, :b], `a + b` ]; concat['first', 'last']
 # => [#<Proc>, "first", "last"]
+# fn[:concat, [:args], `args.join` ]; concat['first', 'middle', 'last']
+# => [#<Proc>, "first", "middle", "last"]
+# => "firstmiddlelast"
+# fn[:dotwice, [:a, :proc], `proc[a] + proc[a]` ]; dotwice['keith'] { "Hello #{it}" }
+# => [#<Proc>, "keith", #<Proc>]
+# => "Hello keithHello keith"
 
 fn = ->(name, vars, o = nil, &block) {
   vars = Array(vars)
@@ -38,13 +50,13 @@ fn = ->(name, vars, o = nil, &block) {
   args = vars.map { |v| v = v.to_s; if v == "args" then "*args" elsif v == "proc" then "&proc" else v end }.join(',')
 
   case o
-  in [prc, *rest] if prc.is_a?(Proc)
+  in [prc, *rest] if prc.is_a?(Proc) # works with args BUT TEST PROC
     raise "The body of the fn includes a proc which is not an fn. The proc in here: #{o.inspect}" unless (prc[] rescue false) && (prc[] in [Proc, Symbol])
     local_variable_set(name, eval("->(#{args}) { #{[ prc[][1], *rest ].inspect(*vars)} }"))
-  in String
-    local_variable_set(name, eval("->(#{args}) { [ ->{ [ ->(#{args}) { #{o} }, :anonymous] }, #{args}] }")) # Does this works with the two special args
+  in String # works with args & proc
+    local_variable_set(name, eval("->(#{args}) { [ ->{ [ ->(#{args}) { #{o} }, :anonymous] }, #{vars.join(',')}] }")) # Does this works with the two special args
   in nil
-    # HERE
+    # HERE test special args
     raise ArgumentError, "When defining a function without specifying the body, a block is expected:  fn[:func, [:a, :b]] { ... }" unless block_given?
     local_variable_set(name, ->(*vars) { block[*vars] })
   in Proc
