@@ -68,10 +68,11 @@ class Array
   def exec_proc(prc, args)
     if args.last in Proc
       proc_arg = args.pop
-      prc[*args, &proc_arg]
+      result = prc[*args, &proc_arg]
     else
-      prc[*args]
+      result = prc[*args]
     end
+    result
   end
 
   def remaining_args

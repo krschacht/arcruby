@@ -1,0 +1,5 @@
+* Let me dynamically declare local variables
+* Let me override [] array declarations
+* Let me override "" string declarations
+* Let me override %w[ .. ] and all it's variations (like I can with backticks)
+* Let me declare more prefix methods on a class (like ~ but more arbitrary characters)
