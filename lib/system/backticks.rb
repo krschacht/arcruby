@@ -2,11 +2,12 @@ class String
   alias_method :original_inspect, :inspect
 
   def inspect
-    if self =~ /["`]/
-      "`#{self}`"
-    else
-      original_inspect
-    end
+    # if self =~ /["`]/
+    #   "`#{self}`"
+    # else
+    #   original_inspect
+    # end
+    "`#{self}`"
   end
 end
 

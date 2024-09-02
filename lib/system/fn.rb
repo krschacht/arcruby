@@ -48,21 +48,32 @@
 # => [#<Proc>, "keith", #<Proc>]
 # => "Hello keithHello keith"
 #
-# fn[:concat, [:a, :b]] { _1 + _2 }; concat['first', 'last']
-# => [#<Proc>, "first", "last"]
-# fn[:greet, []] { puts "hello" }; greet[]
-#=> "hello"
-# fn[:concat, [:args]] { it.join }; concat['first', 'middle', 'last']
-# => [#<Proc>, "first", "middle", "last"]
-# => "firstmiddlelast"
-# fn[:dotwicer, [:a, :proc]] { proc[a] + proc[a] }; dotwicer['keith'] { "Hello #{it}" }
-# => [#<Proc>, "keith", #<Proc>]
-# => "Hello keithHello keith"
+# BLOCK
 #
-# fn[:concat, [:a, :b], ->{ _1 + _2 }]; concat['first', 'middle']
-# => [#<Proc>, "first", "middle"]
-
-
+# fn[:greet, []] { "hello" }; greet[]                                                  # with no args
+# => [#<:greet>]
+# => `hello`
+# fn[:concat, [:a, :b]] { _1 + _2 }; concat['first', 'last']                           # with named args
+# => [#<:concat>, `first`, `last`]
+# => `firstlast`
+# fn[:concat, [:args]] { it.join }; concat['first', 'middle', 'last']                  # with wildcard args
+# => #<:concat>, `first`, `middle`, `last`]
+# => `firstmiddlelast`
+# fn[:concat, [:a, :args]] { "#{_1} then #{_2}" }; concat['a', 'b', 'c']               # with named & wildcard args
+# [#<:concat>, `a`, `b`, `c`]
+# => `a then [`b`, `c`]`
+# fn[:dotwicer, [:proc]] { _1[] + _1[] }; dotwicer[] { "Hello there" }                 # with proc args
+# => [#<:dotwicer>, #<Proc>]
+# => `Hello thereHello there`
+# fn[:dotwicer, [:a, :proc]] { _2[_1] + _2[_1] }; dotwicer['keith'] { "Hello #{it}" }  # with named & proc args
+# => [#<:dotwicer>, `keith`, #<Proc>]
+# => `Hello keithHello keith`
+# fn[:dotwicer, [:args, :proc]] { puts "hi" }                                          # not supported
+# => RuntimeError: Using both :prc and :args in a method definition is not supported.
+# fn[:dotwicer, [:a, :proc, :b]] { puts "hi" }                                         # not supported
+# => RuntimeError: When using :proc it must be the last parameter.
+# fn[:dotwicer, [:a, :args, :b]] { puts "hi" }                                         # not supported
+# => RuntimeError: When using :args it must be the last parameter.
 
 
 # what about when args is not the ONLY param but it's one of the params?
@@ -80,8 +91,31 @@ fn = ->(name, vars, o = nil, &block) {
   end
 
   case o # create a proc which looks like a method call but it simply returns the proper array-proc form
+
+  in nil unless block.nil?
+    raise "Using both :prc and :args in a method definition is not supported." if vars.include?(:args) && vars.include?(:proc)
+    raise "When using :args it must be the last parameter." if vars.include?(:args) && vars.index(:args) != vars.length-1
+    raise "When using :proc it must be the last parameter." if vars.include?(:proc) && vars.index(:proc) != vars.length-1
+
+    if vars.include?(:args)
+      local_variable_set(name, ->(*all) { [ ->{ [ ->(*all) {
+        local_binding = binding
+        vars.each_with_index do |v, i|
+          if v == :args
+            local_binding.local_variable_set(v, all[i..])
+          else
+            local_binding.local_variable_set(v, all[i])
+          end
+        end
+
+        block[*vars.map { |v| local_binding.local_variable_get(v) }]
+      }, name ] }, *all ] })
+    else
+      local_variable_set(name, ->(*all, &prc) { all.push(prc) unless prc.nil?; [ ->{ [ ->(*all) { block[*all] }, name ] }, *all ] })
+    end
+
   in [prc, *rest] if prc.is_a?(Proc)
-    raise "The body of the fn includes a proc which is not an fn. The proc in here: #{o.inspect}" unless prc[] in [Proc, *ignore] && (prc[].first[] rescue false) && (func[].first[] in [Proc, Symbol])
+    raise "The body of the fn includes a proc which is not an fn. The proc in here: #{o.inspect}" unless (prc[] in [Proc, *ignore]) && (prc[].first[] rescue false) && (func[].first[] in [Proc, Symbol])
     func = prc[].first
     local_variable_set(name, ->(*all) {
       local_binding = binding
@@ -93,15 +127,8 @@ fn = ->(name, vars, o = nil, &block) {
     })
   in String
     local_variable_set(name, eval("->(#{args}) { [ ->{ [ ->(#{args}) { #{o} }, :anonymous ] }, #{var_list} ] }"))
-  in nil
-    raise "When defining a function without specifying the body, a block is expected:  fn[:func, [:a, :b]] { ... }" if block.nil?
-    if vars.map(&:to_s).include?("args")
-      local_variable_set(name, ->(*all) { [ ->{ [ ->(*all) { block[all] }, :anonymous ] }, *all ] })
-    else
-      local_variable_set(name, ->(*all) { [ ->{ [ ->(*all) { block[*all] }, :anonymous ] }, *all ] })
-    end
   else
-    raise "No valid form of fn was called"
+    raise "Invalid fn. Accepted forms are fn[:concat, [:a,:b], [string, :a, :b]] or fn[:concat, [:a,:b], `a + b`] or fn[:concat, [:a,:b]] { _1 + _2 }"
   end
 }
 

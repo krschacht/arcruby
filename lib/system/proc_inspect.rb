@@ -1,5 +1,5 @@
 class Proc
   def inspect
-    "#<Proc>"
+    "#<#{":#{self[].last}" rescue "Proc"}>"
   end
 end
