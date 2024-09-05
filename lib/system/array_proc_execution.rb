@@ -49,13 +49,13 @@ class Array
       exec_proc(prc, remaining_args)
 
     in Symbol
-      true_fn = global_variable_get("@#{fn}")
+      true_fn = method_get(fn)
       raise "The array-proc first element is a symbol that does not refer to a valid fn: :#{fn}" unless (true_fn[] rescue false) && (true_fn[] in [Proc, Symbol])
       prc = true_fn[].first
       exec_proc(prc, remaining_args)
 
     in String if fn.to_s.start_with?(':')
-      true_fn = global_variable_get(fn.sub(':', '@'))
+      true_fn = method_get(fn)
       raise "The array-proc first element is a symbol that does not refer to a valid fn: #{fn}" unless (true_fn[] rescue false) && (true_fn[] in [Proc, Symbol])
       prc = true_fn[].first
       exec_proc(prc, remaining_args)
@@ -80,6 +80,7 @@ class Array
   end
 
   def global_variable_get(variable)
-    eval("self", ROOT).instance_variable_get(variable.to_s.gsub(":", "@"))
+    #eval("self", ROOT).instance_variable_get(variable.to_s.gsub(":", "@"))
+    TOPLEVEL_BINDING.local_variable_get(variable.to_s.gsub(":", "").to_sym)
   end
 end
