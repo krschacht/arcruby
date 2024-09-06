@@ -107,17 +107,12 @@
 # => RuntimeError: When using :args it must be the last parameter.
 #
 #
-# TODO: I'm still here, back at the beginning. I discovered an issue that even the simple greet defintion needs to work in all three forms:
-# ~greet[]
-# ~[greet]
-# ~[:greet]
-#
 # I think once I fix this then I confirm that all three forms can also be passed in when defining hello. Then keep testing the rest of array-procs, I'm about half way through it.
 
 # array-procs
 #
-# fn[:greet, [], `"hello"` ]; fn[:hello, [], greet[]]; hello[]                                                                   # with no args
-# => RuntimeError: Invalid fn. Accepted forms are ...
+# fn[:greet, [], `"hello"` ]; fn[:hello, [], [greet]]; hello[]                                                                   # with no args
+# => [#<:greet>]
 # => `hello`
 # fn[:concat, [:a, :b], `a+b`]; fn[:reverse, [:a, :b], [:concat, :b, :a]]; reverse['last', 'first']     # with named args
 # => [#<:concat>, `first`, `last`]
@@ -125,31 +120,24 @@
 # fn[:concat, [:args], `args.join`]; fn[:merge, [:args], [:concat, :args]]; merge['first', 'middle', 'last']                  # with wildcard args
 # => #<:concat>, `first`, `middle`, `last`]
 # => `firstmiddlelast`
-# fn[:concat, [:a, :args], `a.inspect+" then "+args.inspect`]; concat['a', 'b', 'c']               # with named & wildcard args
-# [#<:concat>, `a`, `b`, `c`]
-# => `a then [`b`, `c`]`
-# fn[:dotwicer, [:proc], `proc[] + proc[]`]; dotwicer[] { "Hello there" }                 # with proc args
+# fn[:concat, [:args], `args.join`]; fn[:formalize, [:a, :args], [:concat, :args, :a]]; formalize['last', 'first', 'middle']
+# => [#<:concat>, `first`, `middle`, `last`]
+# => `firstmiddlelast`
+# fn[:dotwicer, [:proc], `proc[] + proc[]`]; fn[:doubler, [:proc], [:dotwicer, :proc]]; doubler[] { "Hello" }                 # with proc args
 # => [#<:dotwicer>, #<Proc>]
-# => `Hello thereHello there`
-# fn[:dotwicer, [:a, :proc], `proc[a] + proc[a]` ]; dotwicer['keith'] { "Hello #{it}" }  # with named & proc args
+# => `HelloHello`
+# fn[:dotwicer, [:a, :proc], `proc[a] + proc[a]` ]; fn[:doubler, [:a, :proc], [:dotwicer, :a, :proc]]; doubler['keith'] { "Hello #{it}" }  # with named & proc args
 # => [#<:dotwicer>, `keith`, #<Proc>]
 # => `Hello keithHello keith`
-# fn[:dotwicer, [:args, :proc], `puts "hi"` ]                                          # not supported
-# => RuntimeError: Using both :prc and :args in a method definition is not supported.
-# fn[:dotwicer, [:a, :proc, :b], `puts "hi"` ]                                         # not supported
-# => RuntimeError: When using :proc it must be the last parameter.
-# fn[:dotwicer, [:a, :args, :b], `puts "hi"` ]                                         # not supported
-# => RuntimeError: When using :args it must be the last parameter.
 #
 
-
-
-
-# TODO: confirm that all blocks, procs, and strings work
-# Then try combining the two blocks options into a single example
-# Then reconfirm that all blocks, procs, and strings work
-# decide about removing my proc inspect hack
-
+# fn[:greet, [], `"hello"` ]; fn[:dotwicer, [:args, :proc], [greet] ]                                          # not supported
+# => RuntimeError: Using both :prc and :args in a method definition is not supported.
+# fn[:greet, [], `"hello"` ]; fn[:dotwicer, [:a, :proc, :b], [greet] ]                                         # not supported
+# => RuntimeError: When using :proc it must be the last parameter.
+# fn[:greet, [], `"hello"` ]; fn[:dotwicer, [:a, :args, :b], [greet] ]                                         # not supported
+# => RuntimeError: When using :args it must be the last parameter.
+#
 
 fn = ->(name, vars, o = nil, &block) {
   name = name.to_sym
@@ -163,6 +151,8 @@ fn = ->(name, vars, o = nil, &block) {
     o = nil
   end
 
+  o = -o if o.is_a?(Array)
+
   raise "Using both :prc and :args in a method definition is not supported." if vars.include?(:args) && vars.include?(:proc)
   raise "When using :args it must be the last parameter." if vars.include?(:args) && vars.index(:args) != vars.length-1
   raise "When using :proc it must be the last parameter." if vars.include?(:proc) && vars.index(:proc) != vars.length-1
@@ -170,55 +160,59 @@ fn = ->(name, vars, o = nil, &block) {
   case o # create a proc which looks like a method call but it simply returns the proper array-proc form
 
   in nil unless block.nil?
-    if vars.include?(:args)
-      local_variable_set(name, ->(*all) { [ ->{ [ ->(*all) {
-        local_binding = binding
-        vars.each_with_index do |v, i|
-          if v == :args
-            local_binding.local_variable_set(v, all[i..])
-          else
-            local_binding.local_variable_set(v, all[i])
-          end
-        end
+    method = ->(*all, &prc) {
+      all.push(prc) unless prc.nil?
 
-        block[*vars.map { |v| local_binding.local_variable_get(v) }]
-      }, name ] }, *all ] })
-    else
-      local_variable_set(name, ->(*all, &prc) { all.push(prc) unless prc.nil?; [ ->{ [ ->(*all) { block[*all] }, name ] }, *all ] })
-    end
+      [ ->{
+        [
+          ->(*all) {
+            local_binding = binding
+            vars.each_with_index do |v, i|
+              if v == :args
+                local_binding.local_variable_set(v, all[i..])
+              else
+                local_binding.local_variable_set(v, all[i])
+              end
+            end
+
+            block[*vars.map { |v| local_binding.local_variable_get(v) }]
+          },
+          name
+        ]},
+        *all
+      ]
+    }
+    local_variable_set(name, method)
 
   in String if block.nil?
     method = <<-RUBY
       ->(*all, &prc) {
         all.push(prc) unless prc.nil?
-        [ ->{ [ ->(*all) {
-          local_binding = binding
-          vars.each_with_index do |v, i|
-            if v == :args
-              local_binding.local_variable_set(v, all[i..])
-            else
-              local_binding.local_variable_set(v, all[i])
-            end
-          end
 
-          eval(o, local_binding) },
-          name
-        ]},
-        *all ]
+        [ ->{
+          [ ->(*all) {
+            local_binding = binding
+            vars.each_with_index do |v, i|
+              if v == :args
+                local_binding.local_variable_set(v, all[i..])
+              else
+                local_binding.local_variable_set(v, all[i])
+              end
+            end
+
+            eval(o, local_binding) },
+            name
+          ]},
+          *all
+        ]
       }
     RUBY
     local_variable_set(name, eval(method))
 
-  in [prc, *rest] if prc.is_a?(Proc) || prc.is_a?(Symbol)
-    if prc.is_a?(Symbol)
-      prc = local_variable_get(prc)
-      prc_type = "symbol"
-    else
-      prc_type = "proc"
-    end
-    raise "The body of the fn includes a #{prc_type} which is not an fn. It's here: #{o.inspect}" unless (prc[] in [Proc, *ignore]) && (prc[].first[] rescue false) && (prc[].first[] in [Proc, Symbol])
-    func = prc[].first
-    local_variable_set(name, ->(*all) {
+  in [fn, *rest] # no guards needed because we did -o above to normalize the array-proc form
+    method = ->(*all, &prc) {
+      all.push(prc) unless prc.nil?
+
       local_binding = binding
       vars.each_with_index do |v, i|
         if v == :args
@@ -228,8 +222,10 @@ fn = ->(name, vars, o = nil, &block) {
         end
       end
 
-      [ func, *rest.map { |v| local_binding.local_variable_get(v) }.flatten ]
-    })
+      [ fn, *rest.map { |v| local_binding.local_variable_get(v) }.flatten ]
+    }
+    local_variable_set(name, method)
+
   else
     raise "Invalid fn. Accepted forms are fn[:concat, [:a,:b], [string, :a, :b]] or fn[:concat, [:a,:b], `a + b`] or fn[:concat, [:a,:b]] { _1 + _2 }"
   end
