@@ -1,10 +1,10 @@
 require_relative 'system/proc_inspect'
-require_relative 'system/instance_variable_set'
-require_relative 'system/backticks'
+require_relative 'system/local_variable_set'
+#require_relative 'system/backticks'
 require_relative 'system/array_proc_execution'
-require_relative 'system/array_inspect_substitution'
+#require_relative 'system/array_inspect_substitution'
 require_relative 'system/fn'
-#require_relative 'system/suffix_array_fn'
+require_relative 'system/suffix_array_fn'
 
 return
 

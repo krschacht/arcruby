@@ -1,4 +1,4 @@
-module InstanceVariableSet
+module LocalVariableSet
   def local_variable_set(variable, with_value)
     var_module = Module.new do
       define_method(variable.to_sym) do
@@ -23,4 +23,4 @@ module InstanceVariableSet
   end
 end
 
-Object.include(InstanceVariableSet)
+Object.include(LocalVariableSet)
