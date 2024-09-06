@@ -9,77 +9,83 @@
 # -[ func, arg1, arg2, ... ]
 # -[ func ]
 #
-# TESTS:
+# TESTS for -[]
 #
-# ~[ ->{ [ ->(a) { puts "hello #{a}" }, :greet ] }, 'keith' ]
-# ~[ ->{ [ ->{ puts "hello keith" }, :greet ] } ]
-# greet = ->{ [ ->(a) { puts "hello #{a}" }, :greet ] }; local_variable_set(:greet, greet); ~[ :greet, 'keith' ]
-# greet = ->{ [ ->{ puts "hello keith" }, :greet ] };    local_variable_set(:greet, greet); ~[ :greet ]
+# > fn[:greet, [], `"hello"` ]; -[greet]
+# => [#<:greet>]
 #
-# TEST ERRORS:
+# > fn[:greet, [], `"hello"` ]; -[greet[].first]
+# => [#<:greet>]
 #
-# ~[ ->{}, 'keith' ]
-# => RuntimeError: The array-proc first element is a proc which is not an fn: #<Proc:0x000000011eef9d08 (pry):4 (lambda)>
-# ~[ :greets, 'keith' ]
-# => RuntimeError: The array-proc first element is a symbol that does not refer to a valid fn: :greets
-# ~[ ":greets", 'keith' ]
-# => RuntimeError: The array-proc first element is a symbol that does not refer to a valid fn: :greets
-# ~[ [], 'keith' ]
-# => RuntimeError: The first element of the array-proc was a #{f.class} which is not a symbol or a proc.
+# > fn[:greet, [], `"hello"` ]; -[:greet]
+# => [#<:greet>]
+#
+# > fn[:greet, [], `"hello"` ]; -%w[ :greet ]
+# => [#<:greet>]
+#
+# > fn[:greet, [], `"hello"` ]; -[3]
+# => RuntimeError: The first element of the array-proc was a Integer which is not a symbol or a proper fn.
+#
+# > fn[:greet, [], `"hello"` ]; -["greet"]
+# => RuntimeError: The first element of the array-proc was a String which is not a symbol or a proper fn.
+#
+# > -[->{}]
+# => RuntimeError: The array-proc first element is a proc which is not an fn: #<Proc>
 
-ROOT = binding
+# TESTS for ~[]
+#
+# > fn[:greet, [], `"hello"` ]; ~[greet]
+# => "hello"
+#
+# > fn[:greet, [], `"hello"` ]; ~[greet[].first]
+# => "hello"
+#
+# > fn[:greet, [], `"hello"` ]; ~[:greet]
+# => "hello"
+#
+# > fn[:greet, [], `"hello"` ]; ~%w[ :greet ]
+# => "hello"
+#
+# Error cases are already covered by -[]
+
 
 class Array
-  def ~
-    run_array
-  end
-
-  def -@
-    run_array
-  end
-
-  private
-
-  def run_array
-    fn = self.first
-    case fn
+  def -@ # normalizes the array-proc form to be [fn, ...]
+    prc = self.first
+    case prc
     in Proc
-      raise "The array-proc first element is a proc which is not an fn: #{fn.inspect}" unless (fn[] rescue false) && (fn[] in [Proc, Symbol])
-      prc = fn[].first
-      exec_proc(prc, remaining_args)
+      if (prc[] rescue false) && (prc[] in [Proc, Symbol])
+        self
+      elsif (prc[] rescue false) && (prc[].is_a?(Array) && prc[].first.is_a?(Proc)) && (prc[].first[] in [Proc, Symbol])
+        fn = prc[].first
+        [fn, *remaining_args]
+      else
+        raise "The array-proc first element is a proc which is not an fn: #{prc.inspect}"
+      end
 
-    in Symbol
-      true_fn = method_get(fn)
-      raise "The array-proc first element is a symbol that does not refer to a valid fn: :#{fn}" unless (true_fn[] rescue false) && (true_fn[] in [Proc, Symbol])
-      prc = true_fn[].first
-      exec_proc(prc, remaining_args)
-
-    in String if fn.to_s.start_with?(':')
-      true_fn = method_get(fn)
-      raise "The array-proc first element is a symbol that does not refer to a valid fn: #{fn}" unless (true_fn[] rescue false) && (true_fn[] in [Proc, Symbol])
-      prc = true_fn[].first
-      exec_proc(prc, remaining_args)
+    in Symbol | String => s if s.is_a?(Symbol) || s.start_with?(":")
+      prc = method_get(prc)
+      raise "The array-proc first element is a symbol that does not refer to a valid fn: :#{prc}" unless (prc[] rescue false) && (prc[].is_a?(Array) && prc[].first.is_a?(Proc)) && (prc[].first[] in [Proc, Symbol])
+      fn = prc[].first
+      [fn, *remaining_args]
 
     else
-      raise "The first element of the array-proc was a #{fn.class} which is not a symbol or a proc."
+      raise "The first element of the array-proc was a #{prc.class} which is not a symbol or a proper fn."
     end
   end
 
-  def exec_proc(prc, args)
-    # if args.last in Proc
-    #   proc_arg = args.pop
-    #   result = prc[*args, &proc_arg]
-    # else
-      result = prc[*args]
-    # end
-    # result
+  def ~
+    (fn, *args) = -self
+    fn[].first[*args]
   end
+
+  private
 
   def remaining_args
     self.drop(1).reduce([]) { |arr, a| arr += a.is_a?(Hash) ? Array(a).flatten : [a] }
   end
 
-  def global_variable_get(variable)
+  def method_get(variable)
     #eval("self", ROOT).instance_variable_get(variable.to_s.gsub(":", "@"))
     TOPLEVEL_BINDING.local_variable_get(variable.to_s.gsub(":", "").to_sym)
   end

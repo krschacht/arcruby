@@ -12,7 +12,7 @@ class Array
   def method_missing(method_name, *arguments, &block)
     return super if EXCLUDED_METHODS.include?(method_name)
 
-    [ global_variable_get(method_name), *args]
+    [ method_get(method_name), *args]
   end
 
   private

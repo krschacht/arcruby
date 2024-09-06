@@ -201,7 +201,10 @@ fn = ->(name, vars, o = nil, &block) {
             end
           end
 
-          eval(o, local_binding) }, name ] }, *all ]
+          eval(o, local_binding) },
+          name
+        ]},
+        *all ]
       }
     RUBY
     local_variable_set(name, eval(method))
