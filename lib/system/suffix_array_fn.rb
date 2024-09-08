@@ -21,3 +21,29 @@ class Array
     self.reduce([]) { |arr, a| arr += a.is_a?(Hash) ? Array(a).flatten : [a] }
   end
 end
+
+# TODO: Get suffix-array working maybe by having "fn" explictly declare an instance method on Array (and make sure it doesn't collide with anything) -- DONE!
+# Test to make sure all the fn_factory things work
+# Then see if I can get normal methods working too. This was ChatGPT's idea:
+
+# module TesterModule
+#   def self.tester(*args)
+#     proc { args.inject(:*) }
+#   end
+
+#   def self.[](*args)
+#     tester(*args).call
+#   end
+
+#   def self.method_missing(method_name, *args, &block)
+#     if method_name == :tester
+#       self[*args]
+#     else
+#       super
+#     end
+#   end
+
+#   def self.respond_to_missing?(method_name, include_private = false)
+#     method_name == :tester || super
+#   end
+# end

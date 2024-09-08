@@ -1,10 +1,11 @@
-require_relative 'system/proc_inspect'
+require_relative 'system/fn'
+require_relative 'system/fn_n'
 require_relative 'system/local_variable_set'
 #require_relative 'system/backticks'
 require_relative 'system/array_proc_execution'
 #require_relative 'system/array_inspect_substitution'
-require_relative 'system/fn'
-require_relative 'system/suffix_array_fn'
+require_relative 'system/fn_factory'
+#require_relative 'system/suffix_array_fn'
 
 return
 
@@ -37,7 +38,7 @@ fn[:sym, :s, `s.to_sym` ]
 fn[:ivar_set, [:key, :val], `instance_variable_set(key.to_s, val)` ]
 fn[:const_set, [:key, :val], `Object.const_set(upcase[key], val)` ]
 fn[:struct, :args, `Struct.new(*map[sym, args])` ]
-fn[:set, :args, `args.each_slice(2) {|k,v| ivar_set[k,v] }` ]
+fn[:set, :args, `args.each_slice(2) {|k,v| ivar_set[k,v]}` ]
 fn[:dir_exists, :path, `Dir.exist?(path)` ]
 fn[:iif, [:val, :proc], `val && proc[]` ]
 fn[:uunless, [:val, :proc], `!val && proc[]` ]
