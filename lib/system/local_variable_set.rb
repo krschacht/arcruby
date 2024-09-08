@@ -19,7 +19,11 @@ module LocalVariableSet
 
   def local_variable_get(variable)
     #instance_variable_get("@#{variable}")
-    TOPLEVEL_BINDING.local_variable_get(variable.to_sym)
+    TOPLEVEL_BINDING.local_variable_get(variable.to_sym) rescue nil
+  end
+
+  def local_variable_defined?(variable)
+    !!(TOPLEVEL_BINDING.local_variable_get(variable.to_sym) rescue false)
   end
 end
 

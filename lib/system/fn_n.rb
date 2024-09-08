@@ -19,14 +19,12 @@
 
 class FnN < Proc
   attr_reader :name
-  attr_reader :fn
 
-  def initialize(fn, name, &block)
+  def initialize(name, &block)
     arr = block[]
     raise "FnN.new was not given a proc that returns a 2-element array" unless arr.is_a?(Array) && arr.length == 2
     raise "FnN.new was given a proc array that was not a Proc followed by a name Symbol" unless arr in [Proc, Symbol]
     super(&block)
-    @fn = fn
     @name = name
   end
 

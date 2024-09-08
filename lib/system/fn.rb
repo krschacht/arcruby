@@ -27,18 +27,18 @@ class Fn < Proc
     raise "Fn.new was not given a proc array that contains a valid FnN as the first element" unless arr in [Proc, *rest]
 
     @name = name
-    @fn_n = FnN.new(self, name, &arr.first)
+    @fn_n = FnN.new(name, &arr.first)
     arr[0] = @fn_n
 
-    @block = ->(*args, &prc) { arr }
+    @block = block
   end
 
-  def call(*args, &prc)
-    @block.call(*args, &prc)
+  def call(*all, &prc)
+    @block.call(*all, &prc)
   end
 
-  def []( *args, &prc)
-    call(*args, &prc)
+  def []( *all, &prc)
+    call(*all, &prc)
   end
 
   def inspect

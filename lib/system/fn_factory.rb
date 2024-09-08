@@ -30,14 +30,14 @@
 # fn[:greet, []] { "hello" }; greet[]                                                  # with no args
 # => [#<:greet>]
 # => `hello`
-# fn[:concat, [:a, :b]] { _1 + _2 }; concat['first', 'last']                           # with named args
-# => [#<:concat>, `first`, `last`]
+# fn[:string, [:a, :b]] { _1 + _2 }; string['first', 'last']                           # with named args
+# => [#<:string>, `first`, `last`]
 # => `firstlast`
-# fn[:concat, [:args]] { it.join }; concat['first', 'middle', 'last']                  # with wildcard args
-# => #<:concat>, `first`, `middle`, `last`]
+# fn[:string, [:args]] { it.join }; string['first', 'middle', 'last']                  # with wildcard args
+# => #<:string>, `first`, `middle`, `last`]
 # => `firstmiddlelast`
-# fn[:concat, [:a, :args]] { "#{_1} then #{_2}" }; concat['a', 'b', 'c']               # with named & wildcard args
-# [#<:concat>, `a`, `b`, `c`]
+# fn[:string, [:a, :args]] { "#{_1} then #{_2}" }; string['a', 'b', 'c']               # with named & wildcard args
+# [#<:string>, `a`, `b`, `c`]
 # => `a then [`b`, `c`]`
 # fn[:dotwicer, [:proc]] { _1[] + _1[] }; dotwicer[] { "Hello there" }                 # with proc args
 # => [#<:dotwicer>, #<Proc>]
@@ -57,14 +57,14 @@
 # fn[:greet, [], ->{ "hello" }]; greet[]                                                  # with no args
 # => [#<:greet>]
 # => `hello`
-# fn[:concat, [:a, :b], ->{ _1 + _2 }]; concat['first', 'last']                           # with named args
-# => [#<:concat>, `first`, `last`]
+# fn[:string, [:a, :b], ->{ _1 + _2 }]; string['first', 'last']                           # with named args
+# => [#<:string>, `first`, `last`]
 # => `firstlast`
-# fn[:concat, [:args], ->{ it.join }]; concat['first', 'middle', 'last']                  # with wildcard args
-# => #<:concat>, `first`, `middle`, `last`]
+# fn[:string, [:args], ->{ it.join }]; string['first', 'middle', 'last']                  # with wildcard args
+# => #<:string>, `first`, `middle`, `last`]
 # => `firstmiddlelast`
-# fn[:concat, [:a, :args], ->{ "#{_1} then #{_2}" }]; concat['a', 'b', 'c']               # with named & wildcard args
-# [#<:concat>, `a`, `b`, `c`]
+# fn[:string, [:a, :args], ->{ "#{_1} then #{_2}" }]; string['a', 'b', 'c']               # with named & wildcard args
+# [#<:string>, `a`, `b`, `c`]
 # => `a then [`b`, `c`]`
 # fn[:dotwicer, [:proc], ->{ _1[] + _1[] }]; dotwicer[] { "Hello there" }                 # with proc args
 # => [#<:dotwicer>, #<Proc>]
@@ -81,29 +81,29 @@
 #
 # strings
 #
-# fn[:greet, [], `"hello"` ]; greet[]                                                  # with no args
+# fn[:greet, [], '"hello"' ]; greet[]                                                  # with no args
 # => [#<:greet>]
 # => `hello`
-# fn[:concat, [:a, :b], `a + b`]; concat['first', 'last']                           # with named args
-# => [#<:concat>, `first`, `last`]
+# fn[:string, [:a, :b], 'a + b']; string['first', 'last']                           # with named args
+# => [#<:string>, `first`, `last`]
 # => `firstlast`
-# fn[:concat, [:args], `args.join`]; concat['first', 'middle', 'last']                  # with wildcard args
-# => #<:concat>, `first`, `middle`, `last`]
+# fn[:string, [:args], 'args.join']; string['first', 'middle', 'last']                  # with wildcard args
+# => #<:string>, `first`, `middle`, `last`]
 # => `firstmiddlelast`
-# fn[:concat, [:a, :args], `a.inspect+" then "+args.inspect`]; concat['a', 'b', 'c']               # with named & wildcard args
-# [#<:concat>, `a`, `b`, `c`]
+# fn[:string, [:a, :args], 'a.inspect+" then "+args.inspect']; string['a', 'b', 'c']               # with named & wildcard args
+# [#<:string>, `a`, `b`, `c`]
 # => `a then [`b`, `c`]`
-# fn[:dotwicer, [:proc], `proc[] + proc[]`]; dotwicer[] { "Hello there" }                 # with proc args
+# fn[:dotwicer, [:proc], 'proc[] + proc[]']; dotwicer[] { "Hello there" }                 # with proc args
 # => [#<:dotwicer>, #<Proc>]
 # => `Hello thereHello there`
-# fn[:dotwicer, [:a, :proc], `proc[a] + proc[a]` ]; dotwicer['keith'] { "Hello #{it}" }  # with named & proc args
+# fn[:dotwicer, [:a, :proc], 'proc[a] + proc[a]' ]; dotwicer['keith'] { "Hello #{it}" }  # with named & proc args
 # => [#<:dotwicer>, `keith`, #<Proc>]
 # => `Hello keithHello keith`
-# fn[:dotwicer, [:args, :proc], `puts "hi"` ]                                          # not supported
+# fn[:dotwicer, [:args, :proc], 'puts "hi"' ]                                          # not supported
 # => RuntimeError: Using both :prc and :args in a method definition is not supported.
-# fn[:dotwicer, [:a, :proc, :b], `puts "hi"` ]                                         # not supported
+# fn[:dotwicer, [:a, :proc, :b], 'puts "hi"' ]                                         # not supported
 # => RuntimeError: When using :proc it must be the last parameter.
-# fn[:dotwicer, [:a, :args, :b], `puts "hi"` ]                                         # not supported
+# fn[:dotwicer, [:a, :args, :b], 'puts "hi"' ]                                         # not supported
 # => RuntimeError: When using :args it must be the last parameter.
 #
 #
@@ -111,38 +111,38 @@
 
 # array-procs
 #
-# fn[:greet, [], `"hello"` ]; fn[:hello, [], [greet]]; hello[]                                                                   # with no args
+# fn[:greet, [], '"hello"' ]; fn[:hello, [], [greet]]; hello[]                                                                   # with no args
 # => [#<:greet>]
 # => `hello`
-# fn[:concat, [:a, :b], `a+b`]; fn[:reverse, [:a, :b], [:concat, :b, :a]]; reverse['last', 'first']     # with named args
-# => [#<:concat>, `first`, `last`]
+# fn[:string, [:a, :b], 'a+b']; fn[:flip, [:a, :b], [:string, :b, :a]]; flip['last', 'first']     # with named args
+# => [#<:string>, `first`, `last`]
 # => `firstlast`
-# fn[:concat, [:args], `args.join`]; fn[:merge, [:args], [:concat, :args]]; merge['first', 'middle', 'last']                  # with wildcard args
-# => #<:concat>, `first`, `middle`, `last`]
+# fn[:string, [:args], 'args.join']; fn[:merge, [:args], [:string, :args]]; merge['first', 'middle', 'last']                  # with wildcard args
+# => #<:string>, `first`, `middle`, `last`]
 # => `firstmiddlelast`
-# fn[:concat, [:args], `args.join`]; fn[:formalize, [:a, :args], [:concat, :args, :a]]; formalize['last', 'first', 'middle']
-# => [#<:concat>, `first`, `middle`, `last`]
+# fn[:string, [:args], 'args.join']; fn[:formalize, [:a, :args], [:string, :args, :a]]; formalize['last', 'first', 'middle']
+# => [#<:string>, `first`, `middle`, `last`]
 # => `firstmiddlelast`
-# fn[:dotwicer, [:proc], `proc[] + proc[]`]; fn[:doubler, [:proc], [:dotwicer, :proc]]; doubler[] { "Hello" }                 # with proc args
+# fn[:dotwicer, [:proc], 'proc[] + proc[]']; fn[:doubler, [:proc], [:dotwicer, :proc]]; doubler[] { "Hello" }                 # with proc args
 # => [#<:dotwicer>, #<Proc>]
 # => `HelloHello`
-# fn[:dotwicer, [:a, :proc], `proc[a] + proc[a]` ]; fn[:doubler, [:a, :proc], [:dotwicer, :a, :proc]]; doubler['keith'] { "Hello #{it}" }  # with named & proc args
+# fn[:dotwicer, [:a, :proc], 'proc[a] + proc[a]' ]; fn[:doubler, [:a, :proc], [:dotwicer, :a, :proc]]; doubler['keith'] { "Hello #{it}" }  # with named & proc args
 # => [#<:dotwicer>, `keith`, #<Proc>]
 # => `Hello keithHello keith`
 #
 
-# fn[:greet, [], `"hello"` ]; fn[:dotwicer, [:args, :proc], [greet] ]                                          # not supported
+# fn[:greet, [], '"hello"' ]; fn[:dotwicer, [:args, :proc], [greet] ]                                          # not supported
 # => RuntimeError: Using both :prc and :args in a method definition is not supported.
-# fn[:greet, [], `"hello"` ]; fn[:dotwicer, [:a, :proc, :b], [greet] ]                                         # not supported
+# fn[:greet, [], '"hello"' ]; fn[:dotwicer, [:a, :proc, :b], [greet] ]                                         # not supported
 # => RuntimeError: When using :proc it must be the last parameter.
-# fn[:greet, [], `"hello"` ]; fn[:dotwicer, [:a, :args, :b], [greet] ]                                         # not supported
+# fn[:greet, [], '"hello"' ]; fn[:dotwicer, [:a, :args, :b], [greet] ]                                         # not supported
 # => RuntimeError: When using :args it must be the last parameter.
 #
 
 fn = ->(name, vars, o = nil, &block) {
   name = name.to_sym
 
-  raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].respond_to?(name)
+  raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].native_array_method?(name)
   vars = Array(vars)
   var_list = vars.map { |v| v = v.to_s; if v == "args" then "*args" else v end }.join(',')
   raise ArgumentError, "The second element must be a symbol or an array of symbols:  fn[:func, [:a, :b], ...]" unless vars.all? { |v| v.is_a?(Symbol) }
@@ -165,7 +165,7 @@ fn = ->(name, vars, o = nil, &block) {
     f = Fn.new(name) { |*all, &prc|
       all.push(prc) unless prc.nil?
 
-      [ ->{
+      [ FnN.new(name) {
         [
           ->(*all) {
             local_binding = binding
@@ -186,18 +186,20 @@ fn = ->(name, vars, o = nil, &block) {
     }
     local_variable_set(name, f)
 
+    Array.unfreeze_method(name)
     Array.class_eval do
       define_method(name) do
         [local_variable_get(name), *self]
       end
     end
+    Array.freeze_method(name)
 
   in String if block.nil?
     f_str = <<-RUBY
       Fn.new(name) { |*all, &prc|
         all.push(prc) unless prc.nil?
 
-        [ ->{
+        [ FnN.new(name) {
           [ ->(*all) {
             local_binding = binding
             vars.each_with_index do |v, i|
@@ -217,11 +219,13 @@ fn = ->(name, vars, o = nil, &block) {
     RUBY
     local_variable_set(name, eval(f_str))
 
+    Array.unfreeze_method(name)
     Array.class_eval do
       define_method(name) do
         [local_variable_get(name), *self]
       end
     end
+    Array.freeze_method(name)
 
   in [fn, *rest] # no guards needed because we did -o above to normalize the array-proc form
     f = Fn.new(name) { |*all, &prc|
@@ -240,11 +244,13 @@ fn = ->(name, vars, o = nil, &block) {
     }
     local_variable_set(name, f)
 
+    Array.unfreeze_method(name)
     Array.class_eval do
       define_method(name) do
         [local_variable_get(name), *self]
       end
     end
+    Array.freeze_method(name)
 
   else
     raise "Invalid fn. Accepted forms are fn[:concat, [:a,:b], [string, :a, :b]] or fn[:concat, [:a,:b], 'a + b'] or fn[:concat, [:a,:b]] { _1 + _2 }"
