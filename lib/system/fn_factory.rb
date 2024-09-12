@@ -23,87 +23,87 @@
 #
 # You should then execute this with an array-proc execution method.
 #
-# TESTS:
+# TESTS:  TODO: Modify these tests to use argument names which potentially colide with things in fn
 #
 # blocks
 #
-# fn[:greet, []] { "hello" }; greet[]                                                  # with no args
+# ~df[:greet, []] { "hello" }; greet[]                                                  # with no args
 # => [#<:greet>]
 # => `hello`
-# fn[:string, [:a, :b]] { _1 + _2 }; string['first', 'last']                           # with named args
+# ~df[:string, [:a, :b]] { _1 + _2 }; string['first', 'last']                           # with named args
 # => [#<:string>, `first`, `last`]
 # => `firstlast`
-# fn[:string, [:args]] { it.join }; string['first', 'middle', 'last']                  # with wildcard args
+# ~df[:string, [:args]] { it.join }; string['first', 'middle', 'last']                  # with wildcard args
 # => #<:string>, `first`, `middle`, `last`]
 # => `firstmiddlelast`
-# fn[:string, [:a, :args]] { "#{_1} then #{_2}" }; string['a', 'b', 'c']               # with named & wildcard args
+# ~df[:string, [:a, :args]] { "#{_1} then #{_2}" }; string['a', 'b', 'c']               # with named & wildcard args
 # [#<:string>, `a`, `b`, `c`]
 # => `a then [`b`, `c`]`
-# fn[:dotwicer, [:proc]] { _1[] + _1[] }; dotwicer[] { "Hello there" }                 # with proc args
+# ~df[:dotwicer, [:proc]] { _1[] + _1[] }; dotwicer[] { "Hello there" }                 # with proc args
 # => [#<:dotwicer>, #<Proc>]
 # => `Hello thereHello there`
-# fn[:dotwicer, [:a, :proc]] { _2[_1] + _2[_1] }; dotwicer['keith'] { "Hello #{it}" }  # with named & proc args
+# ~df[:dotwicer, [:a, :proc]] { _2[_1] + _2[_1] }; dotwicer['keith'] { "Hello #{it}" }  # with named & proc args
 # => [#<:dotwicer>, `keith`, #<Proc>]
 # => `Hello keithHello keith`
-# fn[:dotwicer, [:args, :proc]] { puts "hi" }                                          # not supported
+# ~df[:dotwicer, [:args, :proc]] { puts "hi" }                                          # not supported
 # => RuntimeError: Using both :prc and :args in a method definition is not supported.
-# fn[:dotwicer, [:a, :proc, :b]] { puts "hi" }                                         # not supported
+# ~df[:dotwicer, [:a, :proc, :b]] { puts "hi" }                                         # not supported
 # => RuntimeError: When using :proc it must be the last parameter.
-# fn[:dotwicer, [:a, :args, :b]] { puts "hi" }                                         # not supported
+# ~df[:dotwicer, [:a, :args, :b]] { puts "hi" }                                         # not supported
 # => RuntimeError: When using :args it must be the last parameter.
 #
 # procs
 #
-# fn[:greet, [], ->{ "hello" }]; greet[]                                                  # with no args
+# ~df[:greet, [], ->{ "hello" }]; greet[]                                                  # with no args
 # => [#<:greet>]
 # => `hello`
-# fn[:string, [:a, :b], ->{ _1 + _2 }]; string['first', 'last']                           # with named args
+# ~df[:string, [:a, :b], ->{ _1 + _2 }]; string['first', 'last']                           # with named args
 # => [#<:string>, `first`, `last`]
 # => `firstlast`
-# fn[:string, [:args], ->{ it.join }]; string['first', 'middle', 'last']                  # with wildcard args
+# ~df[:string, [:args], ->{ it.join }]; string['first', 'middle', 'last']                  # with wildcard args
 # => #<:string>, `first`, `middle`, `last`]
 # => `firstmiddlelast`
-# fn[:string, [:a, :args], ->{ "#{_1} then #{_2}" }]; string['a', 'b', 'c']               # with named & wildcard args
+# ~df[:string, [:a, :args], ->{ "#{_1} then #{_2}" }]; string['a', 'b', 'c']               # with named & wildcard args
 # [#<:string>, `a`, `b`, `c`]
 # => `a then [`b`, `c`]`
-# fn[:dotwicer, [:proc], ->{ _1[] + _1[] }]; dotwicer[] { "Hello there" }                 # with proc args
+# ~df[:dotwicer, [:proc], ->{ _1[] + _1[] }]; dotwicer[] { "Hello there" }                 # with proc args
 # => [#<:dotwicer>, #<Proc>]
 # => `Hello thereHello there`
-# fn[:dotwicer, [:a, :proc], ->{ _2[_1] + _2[_1] }]; dotwicer['keith'] { "Hello #{it}" }  # with named & proc args
+# ~df[:dotwicer, [:a, :proc], ->{ _2[_1] + _2[_1] }]; dotwicer['keith'] { "Hello #{it}" }  # with named & proc args
 # => [#<:dotwicer>, `keith`, #<Proc>]
 # => `Hello keithHello keith`
-# fn[:dotwicer, [:args, :proc], ->{ puts "hi" }]                                          # not supported
+# ~df[:dotwicer, [:args, :proc], ->{ puts "hi" }]                                          # not supported
 # => RuntimeError: Using both :prc and :args in a method definition is not supported.
-# fn[:dotwicer, [:a, :proc, :b], ->{ puts "hi" }]                                         # not supported
+# ~df[:dotwicer, [:a, :proc, :b], ->{ puts "hi" }]                                         # not supported
 # => RuntimeError: When using :proc it must be the last parameter.
-# fn[:dotwicer, [:a, :args, :b], ->{ puts "hi" }]                                         # not supported
+# ~df[:dotwicer, [:a, :args, :b], ->{ puts "hi" }]                                         # not supported
 # => RuntimeError: When using :args it must be the last parameter.
 #
 # strings
 #
-# fn[:greet, [], '"hello"' ]; greet[]                                                  # with no args
+# ~df[:greet, [], '"hello"' ]; greet[]                                                  # with no args
 # => [#<:greet>]
 # => `hello`
-# fn[:string, [:a, :b], 'a + b']; string['first', 'last']                           # with named args
+# ~df[:string, [:a, :b], 'a + b']; string['first', 'last']                           # with named args
 # => [#<:string>, `first`, `last`]
 # => `firstlast`
-# fn[:string, [:args], 'args.join']; string['first', 'middle', 'last']                  # with wildcard args
+# ~df[:string, [:args], 'args.join']; string['first', 'middle', 'last']                  # with wildcard args
 # => #<:string>, `first`, `middle`, `last`]
 # => `firstmiddlelast`
-# fn[:string, [:a, :args], 'a.inspect+" then "+args.inspect']; string['a', 'b', 'c']               # with named & wildcard args
+# ~df[:string, [:a, :args], 'a.inspect+" then "+args.inspect']; string['a', 'b', 'c']               # with named & wildcard args
 # [#<:string>, `a`, `b`, `c`]
 # => `a then [`b`, `c`]`
-# fn[:dotwicer, [:proc], 'proc[] + proc[]']; dotwicer[] { "Hello there" }                 # with proc args
+# ~df[:dotwicer, [:proc], 'proc[] + proc[]']; dotwicer[] { "Hello there" }                 # with proc args
 # => [#<:dotwicer>, #<Proc>]
 # => `Hello thereHello there`
-# fn[:dotwicer, [:a, :proc], 'proc[a] + proc[a]' ]; dotwicer['keith'] { "Hello #{it}" }  # with named & proc args
+# ~df[:dotwicer, [:a, :proc], 'proc[a] + proc[a]' ]; dotwicer['keith'] { "Hello #{it}" }  # with named & proc args
 # => [#<:dotwicer>, `keith`, #<Proc>]
 # => `Hello keithHello keith`
-# fn[:dotwicer, [:args, :proc], 'puts "hi"' ]                                          # not supported
+# ~df[:dotwicer, [:args, :proc], 'puts "hi"' ]                                          # not supported
 # => RuntimeError: Using both :prc and :args in a method definition is not supported.
-# fn[:dotwicer, [:a, :proc, :b], 'puts "hi"' ]                                         # not supported
+# ~df[:dotwicer, [:a, :proc, :b], 'puts "hi"' ]                                         # not supported
 # => RuntimeError: When using :proc it must be the last parameter.
-# fn[:dotwicer, [:a, :args, :b], 'puts "hi"' ]                                         # not supported
+# ~df[:dotwicer, [:a, :args, :b], 'puts "hi"' ]                                         # not supported
 # => RuntimeError: When using :args it must be the last parameter.
 #
 #
@@ -111,31 +111,31 @@
 
 # array-procs
 #
-# fn[:greet, [], '"hello"' ]; fn[:hello, [], [greet]]; hello[]                                                                   # with no args
+# ~df[:greet, [], '"hello"' ]; ~df[:hello, [], [greet]]; hello[]                                                                   # with no args
 # => [#<:greet>]
 # => `hello`
-# fn[:string, [:a, :b], 'a+b']; fn[:flip, [:a, :b], [:string, :b, :a]]; flip['last', 'first']     # with named args
+# ~df[:string, [:a, :b], 'a+b']; ~df[:flip, [:a, :b], [:string, :b, :a]]; flip['last', 'first']     # with named args
 # => [#<:string>, `first`, `last`]
 # => `firstlast`
-# fn[:string, [:args], 'args.join']; fn[:merge, [:args], [:string, :args]]; merge['first', 'middle', 'last']                  # with wildcard args
+# ~df[:string, [:args], 'args.join']; ~df[:merge, [:args], [:string, :args]]; merge['first', 'middle', 'last']                  # with wildcard args
 # => #<:string>, `first`, `middle`, `last`]
 # => `firstmiddlelast`
-# fn[:string, [:args], 'args.join']; fn[:formalize, [:a, :args], [:string, :args, :a]]; formalize['last', 'first', 'middle']
+# ~df[:string, [:args], 'args.join']; ~df[:formalize, [:a, :args], [:string, :args, :a]]; formalize['last', 'first', 'middle']
 # => [#<:string>, `first`, `middle`, `last`]
 # => `firstmiddlelast`
-# fn[:dotwicer, [:proc], 'proc[] + proc[]']; fn[:doubler, [:proc], [:dotwicer, :proc]]; doubler[] { "Hello" }                 # with proc args
+# ~df[:dotwicer, [:proc], 'proc[] + proc[]']; ~df[:doubler, [:proc], [:dotwicer, :proc]]; doubler[] { "Hello" }                 # with proc args
 # => [#<:dotwicer>, #<Proc>]
 # => `HelloHello`
-# fn[:dotwicer, [:a, :proc], 'proc[a] + proc[a]' ]; fn[:doubler, [:a, :proc], [:dotwicer, :a, :proc]]; doubler['keith'] { "Hello #{it}" }  # with named & proc args
+# ~df[:dotwicer, [:a, :proc], 'proc[a] + proc[a]' ]; ~df[:doubler, [:a, :proc], [:dotwicer, :a, :proc]]; doubler['keith'] { "Hello #{it}" }  # with named & proc args
 # => [#<:dotwicer>, `keith`, #<Proc>]
 # => `Hello keithHello keith`
 #
 
-# fn[:greet, [], '"hello"' ]; fn[:dotwicer, [:args, :proc], [greet] ]                                          # not supported
+# ~df[:greet, [], '"hello"' ]; ~df[:dotwicer, [:args, :proc], [greet] ]                                          # not supported
 # => RuntimeError: Using both :prc and :args in a method definition is not supported.
-# fn[:greet, [], '"hello"' ]; fn[:dotwicer, [:a, :proc, :b], [greet] ]                                         # not supported
+# ~df[:greet, [], '"hello"' ]; ~df[:dotwicer, [:a, :proc, :b], [greet] ]                                         # not supported
 # => RuntimeError: When using :proc it must be the last parameter.
-# fn[:greet, [], '"hello"' ]; fn[:dotwicer, [:a, :args, :b], [greet] ]                                         # not supported
+# ~df[:greet, [], '"hello"' ]; ~df[:dotwicer, [:a, :args, :b], [greet] ]                                         # not supported
 # => RuntimeError: When using :args it must be the last parameter.
 #
 
@@ -156,6 +156,8 @@ fn = ->(name, vars, o = nil, &block) {
   raise "When using :args it must be the last parameter." if vars.include?(:args) && vars.index(:args) != vars.length-1
   raise "When using :proc it must be the last parameter." if vars.include?(:proc) && vars.index(:proc) != vars.length-1
 
+  puts "### Declaring #{name}" if name == :df && false
+    binding.irb if name == :df && false
   case o # create a proc which looks like a method call but it simply returns the proper array-proc form
 
   in nil unless block.nil?
@@ -165,16 +167,20 @@ fn = ->(name, vars, o = nil, &block) {
       [ FnN.new(name) {
         [
           ->(*all) {
-            local_binding = binding
+            context = Class.new { def new_binding = binding }.new.new_binding
+            puts "before bindings" if name == :df && false
+            binding.irb if name == :df && false
             vars.each_with_index do |v, i|
               if v == :args
-                local_binding.local_variable_set(v, all[i..])
+                context.local_variable_set(v, all[i..])
               else
-                local_binding.local_variable_set(v, all[i])
+                context.local_variable_set(v, all[i])
               end
             end
 
-            block[*vars.map { |v| local_binding.local_variable_get(v) }]
+            puts "after bindings, about to call" if name == :df && false
+            binding.irb if name == :df && false
+            block[*vars.map { |v| context.local_variable_get(v) }]
           },
           name
         ]},
@@ -189,16 +195,16 @@ fn = ->(name, vars, o = nil, &block) {
 
         [ FnN.new(name) {
           [ ->(*all) {
-            local_binding = binding
+            context = Class.new { def new_binding = binding }.new.new_binding
             vars.each_with_index do |v, i|
               if v == :args
-                local_binding.local_variable_set(v, all[i..])
+                context.local_variable_set(v, all[i..])
               else
-                local_binding.local_variable_set(v, all[i])
+                context.local_variable_set(v, all[i])
               end
             end
 
-            eval(o, local_binding) },
+            eval(o, context) },
             name
           ]},
           *all
@@ -207,20 +213,19 @@ fn = ->(name, vars, o = nil, &block) {
     RUBY
     )
 
-  in [fn, *rest] # no guards needed because we did -o above to normalize the array-proc form
+  in [f, *rest] # no guards needed because we did -o above to normalize the array-proc form
     Fn.new(name) { |*all, &prc|
       all.push(prc) unless prc.nil?
 
-      local_binding = binding
+      context = Class.new { def new_binding = binding }.new.new_binding
       vars.each_with_index do |v, i|
         if v == :args
-          local_binding.local_variable_set(v, all[i..])
+          context.local_variable_set(v, all[i..])
         else
-          local_binding.local_variable_set(v, all[i])
+          context.local_variable_set(v, all[i])
         end
       end
-
-      [ fn, *rest.map { |v| local_binding.local_variable_get(v) }.flatten ]
+      [ f, *rest.map { |v| context.local_variable_get(v) }.flatten ]
     }
 
 
@@ -248,15 +253,15 @@ df_set(:full_method_set, fn[:full_method_set, [:name]] {
 })
 ~df_get(:full_method_set)[:fn]
 
-df = ->(names, vars, o = nil, &block) {
+df_set(:df, fn[:df, [:names, :vars, :o, :proc]] {
+  names = _1; vars = _2; o = _3; blk = _4
   names = Array(names).map(&:to_sym)
   names.each do |name|
     raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].native_array_method?(name)
-
-    df_set name, fn[name, vars, o, &block]
+    df_set name, fn[name, vars, o, &blk]
     ~df_get(:full_method_set)[name]  if ~df_get(:valid_variable_name?)[name] && ! ~df_get(:is_keyword?)[name]
   end
 }
-df_set(:df, df)
+)
 local_variable_set(:df)
 ~df_get(:full_method_set)[:df]
