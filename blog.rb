@@ -1,10 +1,8 @@
 #!/usr/bin/env ruby
-require 'pry'
 
-puts "blog"
 require "./lib/brackets"
 
-binding.pry
+binding.irb
 return
 
 

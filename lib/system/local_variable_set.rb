@@ -1,8 +1,7 @@
 module LocalVariableSet
-  def local_variable_set(variable, with_value)
+  def local_variable_set(variable, with_value = nil)
     var_module = Module.new do
       define_method(variable.to_sym) do
-        #puts "inside getter" + variable.to_sym.to_s
         TOPLEVEL_BINDING.local_variable_get(variable.to_sym)
       end
 
@@ -12,13 +11,11 @@ module LocalVariableSet
     end
 
     extend var_module
-
-    #instance_variable_set("@#{variable}", with_value)
+    with_value ||= df_get(variable.to_sym)
     TOPLEVEL_BINDING.local_variable_set(variable.to_sym, with_value)
   end
 
   def local_variable_get(variable)
-    #instance_variable_get("@#{variable}")
     TOPLEVEL_BINDING.local_variable_get(variable.to_sym) rescue nil
   end
 

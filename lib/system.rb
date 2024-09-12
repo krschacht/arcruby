@@ -1,5 +1,6 @@
 require_relative 'system/fn'
 require_relative 'system/fn_n'
+require_relative 'system/df_set'
 require_relative 'system/local_variable_set'
 #require_relative 'system/backticks'
 require_relative 'system/array_proc_execution'
@@ -11,25 +12,6 @@ require_relative 'system/fn_factory'
 return
 
 DEBUG = true
-
-fn = ->(name, vars, o = nil, &block) {
-  vars = Array(vars)
-  #binding.pry if name == :greet4
-  case o
-  when nil
-    local_variable_set(name, ->(*vars) { block[*vars] })
-  when String
-    args = vars.map { |v| v = v.to_s; if v == "args" then "*args" elsif v == "proc" then "&proc" else v end }.join(',')
-    #binding.pry if name == :sys
-    local_variable_set(name, -> { eval("->(#{args}) { #{o} }") })
-  when Proc
-    local_variable_set(name, ->(*vars) { o[*vars] })
-  end
-}
-local_variable_set(:fn, fn)
-
-_ = ->(*args) { ~[*args] }
-local_variable_set("_", _)
 
 
 fn[:sys, :cmd, `system(cmd)` ]
@@ -44,11 +26,6 @@ fn[:dir_exists, :path, `Dir.exist?(path)` ]
 fn[:iif, [:val, :proc], `val && proc[]` ]
 fn[:uunless, [:val, :proc], `!val && proc[]` ]
 
-
-if DEBUG
-  local_variable_set :foo, 'bar'
-  puts foo
-end
 
 if DEBUG
   greet1 = ->(name) { "hello1 #{name}" }

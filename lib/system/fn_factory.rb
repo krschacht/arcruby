@@ -140,9 +140,6 @@
 #
 
 fn = ->(name, vars, o = nil, &block) {
-  name = name.to_sym
-
-  raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].native_array_method?(name)
   vars = Array(vars)
   var_list = vars.map { |v| v = v.to_s; if v == "args" then "*args" else v end }.join(',')
   raise ArgumentError, "The second element must be a symbol or an array of symbols:  fn[:func, [:a, :b], ...]" unless vars.all? { |v| v.is_a?(Symbol) }
@@ -162,7 +159,7 @@ fn = ->(name, vars, o = nil, &block) {
   case o # create a proc which looks like a method call but it simply returns the proper array-proc form
 
   in nil unless block.nil?
-    f = Fn.new(name) { |*all, &prc|
+    Fn.new(name) { |*all, &prc|
       all.push(prc) unless prc.nil?
 
       [ FnN.new(name) {
@@ -184,18 +181,9 @@ fn = ->(name, vars, o = nil, &block) {
         *all
       ]
     }
-    local_variable_set(name, f)
-
-    Array.unfreeze_method(name)
-    Array.class_eval do
-      define_method(name) do
-        [local_variable_get(name), *self]
-      end
-    end
-    Array.freeze_method(name)
 
   in String if block.nil?
-    f_str = <<-RUBY
+    eval(<<-RUBY
       Fn.new(name) { |*all, &prc|
         all.push(prc) unless prc.nil?
 
@@ -217,18 +205,10 @@ fn = ->(name, vars, o = nil, &block) {
         ]
       }
     RUBY
-    local_variable_set(name, eval(f_str))
-
-    Array.unfreeze_method(name)
-    Array.class_eval do
-      define_method(name) do
-        [local_variable_get(name), *self]
-      end
-    end
-    Array.freeze_method(name)
+    )
 
   in [fn, *rest] # no guards needed because we did -o above to normalize the array-proc form
-    f = Fn.new(name) { |*all, &prc|
+    Fn.new(name) { |*all, &prc|
       all.push(prc) unless prc.nil?
 
       local_binding = binding
@@ -242,19 +222,41 @@ fn = ->(name, vars, o = nil, &block) {
 
       [ fn, *rest.map { |v| local_binding.local_variable_get(v) }.flatten ]
     }
-    local_variable_set(name, f)
 
-    Array.unfreeze_method(name)
-    Array.class_eval do
-      define_method(name) do
-        [local_variable_get(name), *self]
-      end
-    end
-    Array.freeze_method(name)
 
   else
     raise "Invalid fn. Accepted forms are fn[:concat, [:a,:b], [string, :a, :b]] or fn[:concat, [:a,:b], 'a + b'] or fn[:concat, [:a,:b]] { _1 + _2 }"
   end
 }
+df_set(:fn, fn)
+local_variable_set(:fn)
 
-local_variable_set(:fn, fn)
+df_set(:valid_method_name?, fn[:valid_method_name?, [:name],      '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*[!?=]?\z/)'])
+df_set(:valid_variable_name?, fn[:valid_variable_name?, [:name],  '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*\z/)']) # cannot end with !, ?, or =.
+df_set(:is_keyword?, fn[:is_keyword?, [:name], '%w{__FILE__ __LINE__ alias and begin BEGIN break case class def defined? do else elsif end END ensure false for if in module next nil not or redo rescue retry return self super then true undef unless until when while yield}.include? name'])
+df_set(:full_method_set, fn[:full_method_set, [:name]] {
+    name = it
+    local_variable_set(name)
+
+    Array.unfreeze_method(name)
+    Array.class_eval do
+      define_method(name) do
+        [df_get(name), *self]
+      end
+    end
+    Array.freeze_method(name)
+})
+~df_get(:full_method_set)[:fn]
+
+df = ->(names, vars, o = nil, &block) {
+  names = Array(names).map(&:to_sym)
+  names.each do |name|
+    raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].native_array_method?(name)
+
+    df_set name, fn[name, vars, o, &block]
+    ~df_get(:full_method_set)[name]  if ~df_get(:valid_variable_name?)[name] && ! ~df_get(:is_keyword?)[name]
+  end
+}
+df_set(:df, df)
+local_variable_set(:df)
+~df_get(:full_method_set)[:df]

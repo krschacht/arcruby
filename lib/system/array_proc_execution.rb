@@ -86,7 +86,6 @@ class Array
   end
 
   def method_get(variable)
-    #eval("self", ROOT).instance_variable_get(variable.to_s.gsub(":", "@"))
-    TOPLEVEL_BINDING.local_variable_get(variable.to_s.gsub(":", "").to_sym)
+    df_get(variable.to_s.gsub(":", "").to_sym)
   end
 end
