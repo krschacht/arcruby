@@ -50,6 +50,7 @@
 #
 # Error cases are already covered by -[]
 
+class ArrayProc < Array; end
 
 class Array
   def -@ # normalizes the array-proc form to be [fn, ...]
@@ -71,17 +72,29 @@ class Array
 
     in Symbol | String => s if s.is_a?(Symbol) || s.start_with?(":")
       fn = method_get(elem)
-      raise "The array-proc first element is a symbol that does not refer to a valid fn: :#{fn}" unless fn.is_a?(Fn) # (prc[] rescue false) && (prc[].is_a?(Array) && prc[].first.is_a?(Proc)) && (prc[].first[] in [Proc, Symbol])
-      [fn.fn_n, *remaining_args]
-
+      if (fn.is_a?(Fn))
+        [fn.fn_n, *remaining_args]
+      else
+        self
+      end
     else
-      raise "The first element of the array-proc was a #{elem.class} which is not a symbol or a proper fn."
+      self
     end
   end
 
   def ~
     (fn_n, *args) = -self
+    raise "The first element of the array-proc was a #{elem.class} which is not a symbol or a proper fn." unless fn_n.is_a?(FnN)
+    args = args.map { |a| a.class == ArrayProc ? ~a : a }
     fn_n.proc[*args]
+  end
+
+  def class
+    if length >= 1 && (-self).first.is_a?(FnN)
+      ArrayProc
+    else
+      super
+    end
   end
 
   private
