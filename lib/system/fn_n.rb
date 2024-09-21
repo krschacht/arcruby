@@ -1,24 +1,24 @@
 # Tests:
 #
-# FnN.new(nil, "tester") { "hello" }
+# FnN.new("tester") { "hello" }
 # => RuntimeError: FnN.new was not given a proc that returns a 2-element array
 #
-# FnN.new(nil, "tester") { [] }
+# FnN.new("tester") { [] }
 # => RuntimeError: FnN.new was not given a proc that returns a 2-element array
 #
-# FnN.new(nil, "tester") { [1,2] }
+# FnN.new("tester") { [1,2] }
 # => RuntimeError: FnN.new was given a proc array that was not a Proc followed by a name Symbol
 #
-# FnN.new(nil, "tester") { [1,:tester] }
+# FnN.new("tester") { [1,:tester] }
 # => RuntimeError: FnN.new was given a proc array that was not a Proc followed by a name Symbol
 #
-# FnN.new(nil, "tester") { [->{}, :tester] }
+# FnN.new("tester") { [->{}, :tester] }
 # => <:tester>
 # => "tester"
 # => nil
 
 class FnN < Proc
-  attr_reader :name
+  attr_reader :name, :proc
 
   def initialize(name, &block)
     arr = block[]
@@ -26,6 +26,7 @@ class FnN < Proc
     raise "FnN.new was given a proc array that was not a Proc followed by a name Symbol" unless arr in [Proc, Symbol]
     super(&block)
     @name = name
+    @proc = arr.first
   end
 
   def inspect

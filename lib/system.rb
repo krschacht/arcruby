@@ -7,6 +7,7 @@ require_relative 'system/array_proc_execution'
 require_relative 'system/array_native_array_method'
 require_relative 'system/array_freeze_method'
 require_relative 'system/fn_factory'
+
 #require_relative 'system/suffix_array_fn'
 
 ~[:df, :sys, :cmd, 'system(cmd)' ]
@@ -14,7 +15,7 @@ require_relative 'system/fn_factory'
 ~[:df, :upcase, :s, 's.to_s.upcase' ]
 ~[:df, :sym, :s, 's.to_sym' ]
 ~[:df, :ivar_set, [:key, :val], 'TOPLEVEL_BINDING.eval("self").instance_variable_set(key.to_s, val)' ]
-~[:df, :const_set, [:key, :val], 'Object.const_set(upcase[key], val)' ]
+~[:df, :const_set, [:key, :val], 'Object.const_set(~upcase[key], val)' ]
 ~[:df, :struct, :args, 'Struct.new(*map[sym, args])' ]
 ~[:df, :set, :args, 'args.each_slice(2) {|k,v| TOPLEVEL_BINDING.eval("self").instance_variable_set(k,v)}' ]
 ~[:df, :dir_exists, :path, 'Dir.exist?(path)' ]

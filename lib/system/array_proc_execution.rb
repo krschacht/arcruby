@@ -11,39 +11,41 @@
 #
 # TESTS for -[]
 #
-# > fn[:greet, [], `"hello"` ]; -[greet]
+# greet = Fn.new("greet") { [->{ [ ->{ "hello" }, :greet ]}] }; df_set(:greet, greet)
+#
+# -[greet]
 # => [#<:greet>]
 #
-# > fn[:greet, [], `"hello"` ]; -[greet[].first]
+# -[greet.fn_n]
 # => [#<:greet>]
 #
-# > fn[:greet, [], `"hello"` ]; -[:greet]
+# -[:greet]
 # => [#<:greet>]
 #
-# > fn[:greet, [], `"hello"` ]; -%w[ :greet ]
+# -%w[ :greet ]
 # => [#<:greet>]
 #
-# > fn[:greet, [], `"hello"` ]; -[3]
+# -[3]
 # => RuntimeError: The first element of the array-proc was a Integer which is not a symbol or a proper fn.
 #
-# > fn[:greet, [], `"hello"` ]; -["greet"]
+# -["greet"]
 # => RuntimeError: The first element of the array-proc was a String which is not a symbol or a proper fn.
 #
-# > -[->{}]
+# -[->{}]
 # => RuntimeError: The array-proc first element is a proc which is not an fn: #<Proc>
 
 # TESTS for ~[]
 #
-# > fn[:greet, [], `"hello"` ]; ~[greet]
+# ~[greet]
 # => "hello"
 #
-# > fn[:greet, [], `"hello"` ]; ~[greet[].first]
+# ~[greet.fn_n]
 # => "hello"
 #
-# > fn[:greet, [], `"hello"` ]; ~[:greet]
+# ~[:greet]
 # => "hello"
 #
-# > fn[:greet, [], `"hello"` ]; ~%w[ :greet ]
+# ~%w[ :greet ]
 # => "hello"
 #
 # Error cases are already covered by -[]
@@ -51,32 +53,35 @@
 
 class Array
   def -@ # normalizes the array-proc form to be [fn, ...]
-    prc = self.first
-    case prc
-    in Proc
-      if (prc[] rescue false) && (prc[] in [Proc, Symbol])
-        self
-      elsif (prc[] rescue false) && (prc[].is_a?(Array) && prc[].first.is_a?(Proc)) && (prc[].first[] in [Proc, Symbol])
-        fn = prc[].first
-        [fn, *remaining_args]
-      else
-        raise "The array-proc first element is a proc which is not an fn: #{prc.inspect}"
-      end
+    elem = self.first
+    case elem
+    in FnN
+      self
+    in Fn
+      [elem.fn_n, *remaining_args]
+      #[elem, *remaining_args]
+      # if (prc[] rescue false) && (prc[] in [Proc, Symbol])
+      #   self
+      # elsif (prc[] rescue false) && (prc[].is_a?(Array) && prc[].first.is_a?(Proc)) && (prc[].first[] in [Proc, Symbol])
+      #   fn = prc[].first
+      #   [fn, *remaining_args]
+      # else
+      #   raise "The array-proc first element is a proc which is not an fn: #{prc.inspect}"
+      # end
 
     in Symbol | String => s if s.is_a?(Symbol) || s.start_with?(":")
-      prc = method_get(prc)
-      raise "The array-proc first element is a symbol that does not refer to a valid fn: :#{prc}" unless (prc[] rescue false) && (prc[].is_a?(Array) && prc[].first.is_a?(Proc)) && (prc[].first[] in [Proc, Symbol])
-      fn = prc[].first
-      [fn, *remaining_args]
+      fn = method_get(elem)
+      raise "The array-proc first element is a symbol that does not refer to a valid fn: :#{fn}" unless fn.is_a?(Fn) # (prc[] rescue false) && (prc[].is_a?(Array) && prc[].first.is_a?(Proc)) && (prc[].first[] in [Proc, Symbol])
+      [fn.fn_n, *remaining_args]
 
     else
-      raise "The first element of the array-proc was a #{prc.class} which is not a symbol or a proper fn."
+      raise "The first element of the array-proc was a #{elem.class} which is not a symbol or a proper fn."
     end
   end
 
   def ~
-    (fn, *args) = -self
-    fn[].first[*args]
+    (fn_n, *args) = -self
+    fn_n.proc[*args]
   end
 
   private

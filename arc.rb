@@ -1,9 +1,15 @@
 ~[:df, :prn, :s, 'print s']
 ~[:df, :car, :lst, 'lst.first' ]
 ~[:df, :cdr, :lst, 'lst.drop(1)' ]
+~[:df, :string, :args, 'args.join' ]
 ~[:df, :int, :s, 's.to_i' ]
 ~[:df, :map, [:func, :lst], 'lst.map { |item| ~func[item] }' ] # ~[:map, fn[[:x], 'x+1'], [1, 2, 3]]
 ~[:df, :each, [:var, :list, :block], "~[map, fn[var, block], list]" ]
+~[:df, [:max, :_max], [:lst], 'lst.max' ]
+~[:df, [:min, :_min], [:lst], 'lst.min' ]
+binding.irb
+# TODO: The inner arguments are not evaluating before the outer ones. e.g. This works: ~[:const_set, "abc", 789] but not ~[:const_set, [:string, "a", "bc"], 789]
+~[:df, :dftem, [:args], [:const_set, [:car, :args], [:struct, [:cdr, :args]]]]
 
 # ~[:each, :i, [1,2,3],
 
