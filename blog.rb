@@ -2,9 +2,55 @@
 
 require "./lib/brackets"
 
-binding.irb
-return
+# (= postdir* "arc/posts/"  maxid* 0  posts* (table))
+~[:set, :@postdir, "arc/posts/",  :@maxid, 0,  :@posts, nil]
 
+# (= blogtitle* "A Blog")
+~[:set, :@blogtitle, "A Blog"]
+binding.irb
+
+
+# (deftem post  id nil  title nil  text nil)
+~[:dftem, :post,  :id, nil,  :title, nil,  :text, nil]
+
+# (def load-posts ()
+#   (each id (map int (dir postdir*))
+#     (= maxid*      (max maxid* id)
+#        (posts* id) (temload 'post (string postdir* id)))))
+
+# (def save-post (p) (save-table p (string postdir* p!id)))
+
+# (def post (id) (posts* (errsafe:int id)))
+
+# (mac blogpage body
+#   `(whitepage
+#      (center
+#        (widtable 600
+#          (tag b (link blogtitle* "blog"))
+#          (br 3)
+#          ,@body
+#          (br 3)
+#          (w/bars (link "archive")
+#                  (link "new post" "newpost"))))))
+
+# (defop viewpost req (blogop post-page req))
+
+# (def blogop (f req)
+#   (aif (post (arg req "id"))
+#        (f (get-user req) it)
+#        (blogpage (pr "No such post."))))
+
+# (def permalink (p) (string "viewpost?id=" p!id))
+
+
+
+
+
+
+
+
+
+exit(0)
 
 ensure_dir = ->(path){
   uunless[dir_exists[path]] {

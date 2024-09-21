@@ -139,7 +139,20 @@
 # => RuntimeError: When using :args it must be the last parameter.
 #
 
+# TODO: Make fn work like this: ~[:fn, ...]
+
 fn = ->(name, vars, o = nil, &block) {
+  # if name.is_a?(Array) # allow name to be left off for anonymous functions
+  #   o = vars
+  #   vars = name
+  #   name = :anonymous
+  # end
+  if o.nil? && block.nil? # name is being left off so it's an anonymous function
+    o = vars
+    vars = name
+    name = :anonymous
+  end
+
   vars = Array(vars)
   var_list = vars.map { |v| v = v.to_s; if v == "args" then "*args" else v end }.join(',')
   raise ArgumentError, "The second element must be a symbol or an array of symbols:  fn[:func, [:a, :b], ...]" unless vars.all? { |v| v.is_a?(Symbol) }
@@ -156,8 +169,6 @@ fn = ->(name, vars, o = nil, &block) {
   raise "When using :args it must be the last parameter." if vars.include?(:args) && vars.index(:args) != vars.length-1
   raise "When using :proc it must be the last parameter." if vars.include?(:proc) && vars.index(:proc) != vars.length-1
 
-  puts "### Declaring #{name}" if name == :df && false
-    binding.irb if name == :df && false
   case o # create a proc which looks like a method call but it simply returns the proper array-proc form
 
   in nil unless block.nil?
@@ -168,8 +179,6 @@ fn = ->(name, vars, o = nil, &block) {
         [
           ->(*all) {
             context = Class.new { def new_binding = binding }.new.new_binding
-            puts "before bindings" if name == :df && false
-            binding.irb if name == :df && false
             vars.each_with_index do |v, i|
               if v == :args
                 context.local_variable_set(v, all[i..])
@@ -178,8 +187,6 @@ fn = ->(name, vars, o = nil, &block) {
               end
             end
 
-            puts "after bindings, about to call" if name == :df && false
-            binding.irb if name == :df && false
             block[*vars.map { |v| context.local_variable_get(v) }]
           },
           name
@@ -189,13 +196,14 @@ fn = ->(name, vars, o = nil, &block) {
     }
 
   in String if block.nil?
-    eval(<<-RUBY
+    str = <<-RUBY
       Fn.new(name) { |*all, &prc|
         all.push(prc) unless prc.nil?
 
         [ FnN.new(name) {
           [ ->(*all) {
             context = Class.new { def new_binding = binding }.new.new_binding
+            $all_df_defined.each { |v, p| context.local_variable_set(v, p) if !v.to_s.include?('?') }
             vars.each_with_index do |v, i|
               if v == :args
                 context.local_variable_set(v, all[i..])
@@ -203,7 +211,6 @@ fn = ->(name, vars, o = nil, &block) {
                 context.local_variable_set(v, all[i])
               end
             end
-
             eval(o, context) },
             name
           ]},
@@ -211,7 +218,7 @@ fn = ->(name, vars, o = nil, &block) {
         ]
       }
     RUBY
-    )
+    eval(str)
 
   in [f, *rest] # no guards needed because we did -o above to normalize the array-proc form
     Fn.new(name) { |*all, &prc|
@@ -243,13 +250,13 @@ df_set(:full_method_set, fn[:full_method_set, [:name]] {
     name = it
     local_variable_set(name)
 
-    Array.unfreeze_method(name)
-    Array.class_eval do
-      define_method(name) do
-        [df_get(name), *self]
-      end
-    end
-    Array.freeze_method(name)
+    # Array.unfreeze_method(name)
+    # Array.class_eval do
+    #   define_method(name) do
+    #     [df_get(name), *self]
+    #   end
+    # end
+    # Array.freeze_method(name)
 })
 ~df_get(:full_method_set)[:fn]
 
@@ -257,10 +264,11 @@ df_set(:df, fn[:df, [:names, :vars, :o, :proc]] {
   names = _1; vars = _2; o = _3; blk = _4
   names = Array(names).map(&:to_sym)
   names.each do |name|
-    raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].native_array_method?(name)
+    #raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].native_array_method?(name)
     df_set name, fn[name, vars, o, &blk]
-    ~df_get(:full_method_set)[name]  if ~df_get(:valid_variable_name?)[name] && ! ~df_get(:is_keyword?)[name]
+    ~df_get(:full_method_set)[name]  if ~df_get(:valid_variable_name?)[name] && ! ~df_get(:is_keyword?)[name] # && ! [].native_array_method?(name)
   end
+  df_get(names.first)
 }
 )
 local_variable_set(:df)
