@@ -7,8 +7,6 @@ require "./lib/brackets"
 
 # (= blogtitle* "A Blog")
 ~[:set, :@blogtitle, "A Blog"]
-binding.irb
-
 
 # (deftem post  id nil  title nil  text nil)
 ~[:dftem, :post,  :id, nil,  :title, nil,  :text, nil]
@@ -41,84 +39,11 @@ binding.irb
 #        (blogpage (pr "No such post."))))
 
 # (def permalink (p) (string "viewpost?id=" p!id))
+~[:df, :permalink, :p, "[:string, 'viewpost?id=', p.id]"]
 
 
+binding.irb; exit
 
-
-
-
-
-
-
-exit(0)
-
-ensure_dir = ->(path){
-  uunless[dir_exists[path]] {
-    sys[string["mkdir -p ", path]] }}
-
-
-
-# deftem = ->(*args){ const_set[car[args], Struct.new(cdr[args]) }
-
-# ac.rb
-
-dir = ->(path){ Dir.entries(path).reject { |entry| entry == '.' || entry == '..' } }
-
-
-# blog.rb
-
-# Blog tool example.  20 Jan 08, rev 21 May 09.
-#
-# To run:
-# arc> (load "blog.arc")
-# arc> (bsv)
-# go to http://localhost:8080/blog
-
-# (= postdir* "arc/posts/"  maxid* 0  posts* (table))
-[postdir: "arc/posts/",   maxid: 0,   posts: nil].set
-
-# (= blogtitle* "A Blog")
-set[:@blogtitle, "A Blog"]
-
-# (deftem post  id nil  title nil  text nil)
-deftem[*%w[ post  id nil  title nil  text nil ]]
-
-# (def load-posts ()
-#   (each id (map int (dir postdir*))
-#     (= maxid*      (max maxid* id)
-#        (posts* id) (temload 'post (string postdir* id)))))
-
-
-# load_posts = ->(){
-#   each[id, map[int, dir[@postdir]]] { |id|
-#     set[@maxid,     max[@maxid, id]
-#         (posts* id) (temload 'post (string postdir* id)))
-#   }
-# }
-
-# (def save-post (p) (save-table p (string postdir* p!id)))
-
-# (def post (id) (posts* (errsafe:int id)))
-
-# (mac blogpage body
-#   `(whitepage
-#      (center
-#        (widtable 600
-#          (tag b (link blogtitle* "blog"))
-#          (br 3)
-#          ,@body
-#          (br 3)
-#          (w/bars (link "archive")
-#                  (link "new post" "newpost"))))))
-
-# (defop viewpost req (blogop post-page req))
-
-# (def blogop (f req)
-#   (aif (post (arg req "id"))
-#        (f (get-user req) it)
-#        (blogpage (pr "No such post."))))
-
-# (def permalink (p) (string "viewpost?id=" p!id))
 
 # (def post-page (user p) (blogpage (display-post user p)))
 
@@ -171,9 +96,3 @@ deftem[*%w[ post  id nil  title nil  text nil ]]
 #   (ensure-dir postdir*)
 #   (load-posts)
 #   (asv))
-
-bsv = ->(){
-  ensure_dir[@postdir]
-  load_posts[]
-  asv[]
-}

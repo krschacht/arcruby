@@ -207,7 +207,8 @@ fn_proc = ->(name, vars, o = nil, &block) {
               _context.local_variable_set(v, all[i])
             end
           end
-          eval(_o, _context)
+          result = eval(_o, _context)
+          result.class == ArrayProc ? ~result : result
         }[*all]
       }
     RUBY
