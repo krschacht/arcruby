@@ -7,9 +7,9 @@
 ~[:df, :each, [:var, :list, :block], "~[map, fn[var, block], list]" ]
 ~[:df, [:max, :_max], [:lst], 'lst.max' ]
 ~[:df, [:min, :_min], [:lst], 'lst.min' ]
-binding.irb
-# TODO: The inner arguments are not evaluating before the outer ones. e.g. This works: ~[:const_set, "abc", 789] but not ~[:const_set, [:string, "a", "bc"], 789]
+~[:df, :pair, :args, 'args.flatten.each_slice(2).to_a' ]
 ~[:df, :dftem, [:args], [:const_set, [:car, :args], [:struct, [:cdr, :args]]]]
+
 
 # ~[:each, :i, [1,2,3],
 

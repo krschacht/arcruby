@@ -19,18 +19,24 @@
 
 class Fn < Proc
   attr_reader :name
-  attr_reader :fn_n
 
   def initialize(name, &block)
-    arr = block[]
-    raise "Fn.new was not given a proc that returns a valid array" unless arr.is_a?(Array) && arr.length >= 1
-    raise "Fn.new was not given a proc array that contains a valid FnN as the first element" unless arr in [Proc, *rest]
+    # arr = block[]
+    # raise "Fn.new was not given a proc that returns a valid array" unless arr.is_a?(Array) && arr.length >= 1
+    # raise "Fn.new was not given a proc array that contains a valid FnN as the first element" unless arr in [Proc, *rest]
 
     @name = name
-    @fn_n = FnN.new(name, &arr.first)
-    arr[0] = @fn_n
-
     @block = block
+    # @fn_n = if arr.first.is_a?(FnN)
+    #   arr.first
+    # else
+    #    FnN.new(name, &arr.first)
+    # end
+    #@fn_n = FnN.new(name, &arr.first)
+
+    # arr[0] = @fn_n
+
+    # @block = block
   end
 
   def call(*all, &prc)

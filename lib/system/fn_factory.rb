@@ -1,13 +1,13 @@
 # Syntax for defining a function (i.e. array-proc):
 #
-# fn[:concat, [:a, :b], [string, :a, :b]]
-# fn[:concat, [:args],  [string, :args]]
+# df_set(:concat, fn[:concat, [:a, :b], 'a + b' ]); reverse = fn[:reverse, [:a, :b], [:concat, :b, :a]]; reverse['x','y']
+# df_set(:concat, fn[:concat, [:args], 'args.join' ]); same = fn[:same, [:args], [:concat, :args]]; same['x','y']
 #
-# fn[:concat, [:a, :b], `a + b` ]
-# fn[:concat, [:args],  `args.join` ]
+# concat = fn[:concat, [:a, :b], 'a + b' ]; concat['x','y']
+# concat = fn[:concat, [:args],  'args.join' ]; concat['x','y','z']
 #
-# fn[:concat, [:a, :b]] { _1 + _2 }
-# fn[:concat, [:args]]  { args.join }
+# concat = fn[:concat, [:a, :b]] { _1 + _2 }; concat['x','y']
+# concat = fn[:concat, [:args]]  { _1.join }; concat['x','y','z']
 #
 # Note:
 #   args is a special argument name which is replaced with *args
@@ -141,7 +141,7 @@
 
 # TODO: Make fn work like this: ~[:fn, ...]
 
-fn = ->(name, vars, o = nil, &block) {
+fn_proc = ->(name, vars, o = nil, &block) {
   # if name.is_a?(Array) # allow name to be left off for anonymous functions
   #   o = vars
   #   vars = name
@@ -172,83 +172,84 @@ fn = ->(name, vars, o = nil, &block) {
   case o # create a proc which looks like a method call but it simply returns the proper array-proc form
 
   in nil unless block.nil?
-    Fn.new(name) { |*all, &prc|
-      all.push(prc) unless prc.nil?
-
-      [ FnN.new(name) {
-        [
-          ->(*all) {
-            context = Class.new { def new_binding = binding }.new.new_binding
-            vars.each_with_index do |v, i|
-              if v == :args
-                context.local_variable_set(v, all[i..])
-              else
-                context.local_variable_set(v, all[i])
-              end
+    _vars = vars
+    _block = block
+    s = <<-RUBY
+      Fn.new(name) { |*all|
+        ->(#{args}) {
+          _context = Class.new { def new_binding = binding }.new.new_binding
+          $all_df_defined.each { |v, p| _context.local_variable_set(v, TOPLEVEL_BINDING.local_variable_get(v)) if !v.to_s.include?('?') && v != name }
+          _vars.each_with_index do |v, i|
+            if v == :args
+              _context.local_variable_set(v, all[i..])
+            else
+              _context.local_variable_set(v, all[i])
             end
-
-            block[*vars.map { |v| context.local_variable_get(v) }]
-          },
-          name
-        ]},
-        *all
-      ]
-    }
-
-  in String if block.nil?
-    str = <<-RUBY
-      Fn.new(name) { |*all, &prc|
-        all.push(prc) unless prc.nil?
-
-        [ FnN.new(name) {
-          [ ->(*all) {
-            context = Class.new { def new_binding = binding }.new.new_binding
-            $all_df_defined.each { |v, p| context.local_variable_set(v, p) if !v.to_s.include?('?') }
-            vars.each_with_index do |v, i|
-              if v == :args
-                context.local_variable_set(v, all[i..])
-              else
-                context.local_variable_set(v, all[i])
-              end
-            end
-            eval(o, context) },
-            name
-          ]},
-          *all
-        ]
+          end
+          _block[*_vars.map { |v| _context.local_variable_get(v) }]
+        }[*all]
       }
     RUBY
-    eval(str)
+    eval(s)
 
-  in [f, *rest] # no guards needed because we did -o above to normalize the array-proc form
-    Fn.new(name) { |*all, &prc|
-      all.push(prc) unless prc.nil?
+  in String if block.nil?
+    _vars = vars
+    _o = o
+    s = <<-RUBY
+      Fn.new(name) { |*all|
+        ->(#{args}) {
+          _context = Class.new { def new_binding = binding }.new.new_binding
+          $all_df_defined.each { |v, p| _context.local_variable_set(v, TOPLEVEL_BINDING.local_variable_get(v)) if !v.to_s.include?('?') && v != name }
+          _vars.each_with_index do |v, i|
+            if v == :args
+              _context.local_variable_set(v, all[i..])
+            else
+              _context.local_variable_set(v, all[i])
+            end
+          end
+          eval(_o, _context)
+        }[*all]
+      }
+    RUBY
+    eval(s)
 
-      context = Class.new { def new_binding = binding }.new.new_binding
-      vars.each_with_index do |v, i|
-        if v == :args
-          context.local_variable_set(v, all[i..])
-        else
-          context.local_variable_set(v, all[i])
-        end
-      end
-      [ f, *rest.map { |v| context.local_variable_get(v) }.flatten ]
-    }
+  in [_fn, *_rest] # no guards needed because we did -o above to normalize the array-proc form
+    raise "Invalid fn. The body of the method was an array but not an array-proc." if o.class != ArrayProc
+    _vars = vars
 
+    s = <<-RUBY
+      _vars_substitute = ->(arr, context) { arr.map { |v| v.is_a?(Array) ? _vars_substitute[v, context] : (context.local_variables.include?(v) ? context.local_variable_get(v) : v) } }
+      Fn.new(name) { |*all|
+        ->(#{args}) {
+          _context = Class.new { def new_binding = binding }.new.new_binding
+          $all_df_defined.each { |v, p| _context.local_variable_set(v, TOPLEVEL_BINDING.local_variable_get(v)) if !v.to_s.include?('?') && v != name }
+          _vars.each_with_index do |v, i|
+            if v == :args
+              _context.local_variable_set(v, all[i..])
+            else
+              _context.local_variable_set(v, all[i])
+            end
+          end
+          ~[ _fn, *_vars_substitute[_rest, _context] ]
+        }[*all]
+      }
+    RUBY
+    eval(s)
 
   else
+    binding.irb
     raise "Invalid fn. Accepted forms are fn[:concat, [:a,:b], [string, :a, :b]] or fn[:concat, [:a,:b], 'a + b'] or fn[:concat, [:a,:b]] { _1 + _2 }"
   end
 }
-df_set(:fn, fn)
-local_variable_set(:fn)
-
+df_set(:fn, fn_proc)
+#local_variable_set(:fn, Df.new(:fn) { |*args| [:fn, *args] })
+local_variable_set(:fn, fn_proc)
 df_set(:valid_method_name?, fn[:valid_method_name?, [:name],      '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*[!?=]?\z/)'])
 df_set(:valid_variable_name?, fn[:valid_variable_name?, [:name],  '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*\z/)']) # cannot end with !, ?, or =.
 df_set(:is_keyword?, fn[:is_keyword?, [:name], '%w{__FILE__ __LINE__ alias and begin BEGIN break case class def defined? do else elsif end END ensure false for if in module next nil not or redo rescue retry return self super then true undef unless until when while yield}.include? name'])
-df_set(:full_method_set, fn[:full_method_set, [:name]] {
+df_set(:full_method_set?, fn[:full_method_set, [:name]] {
     name = it
-    local_variable_set(name)
+    local_variable_set(name, Df.new(name) { |*args| [name, *args] })
 
     # Array.unfreeze_method(name)
     # Array.class_eval do
@@ -258,7 +259,7 @@ df_set(:full_method_set, fn[:full_method_set, [:name]] {
     # end
     # Array.freeze_method(name)
 })
-~df_get(:full_method_set)[:fn]
+#~df_get(:full_method_set)[:fn]
 
 df_set(:df, fn[:df, [:names, :vars, :o, :proc]] {
   names = _1; vars = _2; o = _3; blk = _4
@@ -266,10 +267,11 @@ df_set(:df, fn[:df, [:names, :vars, :o, :proc]] {
   names.each do |name|
     #raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].native_array_method?(name)
     df_set name, fn[name, vars, o, &blk]
-    ~df_get(:full_method_set)[name]  if ~df_get(:valid_variable_name?)[name] && ! ~df_get(:is_keyword?)[name] # && ! [].native_array_method?(name)
+    df_get(:full_method_set?)[name]  if df_get(:valid_variable_name?)[name] && ! df_get(:is_keyword?)[name] # && ! [].native_array_method?(name)
   end
   df_get(names.first)
 }
 )
-local_variable_set(:df)
-~df_get(:full_method_set)[:df]
+local_variable_set(:df, Df.new(:df) { |*args| [:df, *args] })
+
+#~df_get(:full_method_set)[:df]

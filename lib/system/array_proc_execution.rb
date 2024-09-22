@@ -57,23 +57,22 @@ class Array
     elem = self.first
     case elem
     in FnN
-      self
+      raise "The first element of array-proc was a FnN. That should not ever happen."
     in Fn
-      [elem.fn_n, *remaining_args]
-      #[elem, *remaining_args]
-      # if (prc[] rescue false) && (prc[] in [Proc, Symbol])
-      #   self
-      # elsif (prc[] rescue false) && (prc[].is_a?(Array) && prc[].first.is_a?(Proc)) && (prc[].first[] in [Proc, Symbol])
-      #   fn = prc[].first
-      #   [fn, *remaining_args]
-      # else
-      #   raise "The array-proc first element is a proc which is not an fn: #{prc.inspect}"
-      # end
+      [elem, *remaining_args]
+
+    in Df
+      fn = method_get(elem.name)
+      if (fn.is_a?(Fn))
+        [fn, *remaining_args]
+      else
+        self
+      end
 
     in Symbol | String => s if s.is_a?(Symbol) || s.start_with?(":")
       fn = method_get(elem)
       if (fn.is_a?(Fn))
-        [fn.fn_n, *remaining_args]
+        [fn, *remaining_args]
       else
         self
       end
@@ -83,14 +82,20 @@ class Array
   end
 
   def ~
-    (fn_n, *args) = -self
-    raise "The first element of the array-proc was a #{elem.class} which is not a symbol or a proper fn." unless fn_n.is_a?(FnN)
-    args = args.map { |a| a.class == ArrayProc ? ~a : a }
-    fn_n.proc[*args]
+    (fn, *args) = -self
+
+    raise "The first element of the array-proc was a #{fn.class} which is not a symbol or a proper fn." unless fn.is_a?(Fn)
+    if fn.name == :df
+      args = args[0...-1].map { |a| a.class == ArrayProc ? ~a : a } << args.last
+    else
+      args = args.map { |a| a.class == ArrayProc ? ~a : a }
+    end
+    #binding.irb if fn.name == :dftem
+    fn[*args]
   end
 
   def class
-    if length >= 1 && (-self).first.is_a?(FnN)
+    if length >= 1 && (-self).first.is_a?(Fn)
       ArrayProc
     else
       super
