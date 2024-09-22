@@ -85,12 +85,12 @@ class Array
     (fn, *args) = -self
 
     raise "The first element of the array-proc was a #{fn.class} which is not a symbol or a proper fn." unless fn.is_a?(Fn)
-    if fn.name == :df
+    if fn.name == :df || fn.name == :each || %w[if unless].include?(fn.name.to_s.split('_').first)
       args = args[0...-1].map { |a| a.class == ArrayProc ? ~a : a } << args.last
     else
       args = args.map { |a| a.class == ArrayProc ? ~a : a }
     end
-    #binding.irb if fn.name == :dftem
+    #binding.irb if fn.name == :each
     fn[*args]
   end
 

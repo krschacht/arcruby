@@ -17,6 +17,7 @@ require "./lib/brackets"
 #        (posts* id) (temload 'post (string postdir* id)))))
 
 # (def save-post (p) (save-table p (string postdir* p!id)))
+~[:df, :save_post, :p, [save_table, :p, [string, @postdir, :'p.id']]]
 
 # (def post (id) (posts* (errsafe:int id)))
 
@@ -39,10 +40,10 @@ require "./lib/brackets"
 #        (blogpage (pr "No such post."))))
 
 # (def permalink (p) (string "viewpost?id=" p!id))
-~[:df, :permalink, :p, "[:string, 'viewpost?id=', p.id]"]
-
-
+~[:df, :permalink, :p, [:string, 'viewpost?id=', :'p.id']]
 binding.irb; exit
+
+
 
 
 # (def post-page (user p) (blogpage (display-post user p)))

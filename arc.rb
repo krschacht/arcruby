@@ -3,14 +3,17 @@
 ~[:df, :cdr, :lst, 'lst.drop(1)' ]
 ~[:df, :string, :args, 'args.join' ]
 ~[:df, :int, :s, 's.to_i' ]
-~[:df, :map, [:func, :lst], 'lst.map { |item| ~func[item] }' ] # ~[:map, fn[[:x], 'x+1'], [1, 2, 3]]
-~[:df, :each, [:var, :list, :block], "~[map, fn[var, block], list]" ]
+~[:df, :map, [:func, :lst], 'lst.map { |item| func[item] }' ] # ~[:map, fn[[:x], 'x+1'], [1, 2, 3]]
+~[:df, :each, [:var, :list, :block], "[map, fn[var, block], list]" ] # TODO: change this to [:fn, ...] # ~[:each, :name, ['keith', 'pari'], [:prn, [:string, 'hello ', :name]]]
 ~[:df, [:max, :_max], [:lst], 'lst.max' ]
 ~[:df, [:min, :_min], [:lst], 'lst.min' ]
 ~[:df, :pair, :args, 'args.flatten.each_slice(2).to_a' ]
 ~[:df, :dftem, [:args], [:const_set, [:car, :args], [:struct, [:cdr, :args]]]]
-
-
+~[:df, :save_table, [:post, ], [:const_set, [:car, :args], [:struct, [:cdr, :args]]]]
+~[:df, :ensure_dir, :path, [if_false, [dir_exists, :path], [sys, [string, 'mkdir -p ', :path]]]]
+~[:df, :writefile, [:val, :file], 'tmpfile = "#{file}.tmp"; dir = File.dirname(tmpfile); ~ensure_dir[dir]; File.open(tmpfile, "w") { |o| o.write(val) }; File.rename(tmpfile, file); val']
+~[:df, :tablist, :obj, 'obj.to_h']
+~[:df, :save_table, [:h, :file], [writefile, [tablist, :h], :file]]
 # ~[:each, :i, [1,2,3],
 
 # fn[]

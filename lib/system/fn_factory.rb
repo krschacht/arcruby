@@ -139,7 +139,7 @@
 # => RuntimeError: When using :args it must be the last parameter.
 #
 
-# TODO: Make fn work like this: ~[:fn, ...]
+# TODO: Make fn work like this: ~[:fn, ...]. When I do I'll need to fix the map definnition to do ~func[]
 
 fn_proc = ->(name, vars, o = nil, &block) {
   # if name.is_a?(Array) # allow name to be left off for anonymous functions
@@ -218,8 +218,12 @@ fn_proc = ->(name, vars, o = nil, &block) {
     raise "Invalid fn. The body of the method was an array but not an array-proc." if o.class != ArrayProc
     _vars = vars
 
-    s = <<-RUBY
-      _vars_substitute = ->(arr, context) { arr.map { |v| v.is_a?(Array) ? _vars_substitute[v, context] : (context.local_variables.include?(v) ? context.local_variable_get(v) : v) } }
+    s = <<-RUBY # TODO: Make var subsitute work with :"p.id"  ———  It almost works, but the .last _attr is incorrect for _attr[:cat]
+      _basevar = ->(name) { name.to_s.split('.').first }
+      _attr = ->(name) { name.to_s.split('.').last if name.to_s.include?('.') }
+      _getvar = ->(name, context) { v = context.local_variable_get(_basevar[name]) ; attr = _attr[name]; attr ? v.send(attr.to_sym) : v }
+      _vars_substitute = ->(arr, context) { arr.map { |v| v.is_a?(Array) ? _vars_substitute[v, context] : (v.is_a?(Symbol) && context.local_variables.include?(_basevar[v].to_sym) ? _getvar[v, context] : v) } }
+
       Fn.new(name) { |*all|
         ->(#{args}) {
           _context = Class.new { def new_binding = binding }.new.new_binding
