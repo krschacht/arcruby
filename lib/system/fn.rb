@@ -40,7 +40,11 @@ class Fn < Proc
   end
 
   def call(*all, &prc)
-    @block.call(*all, &prc)
+    begin
+      @block.call(*all, &prc)
+    rescue ArgumentError => e
+      raise "You called #{name} incorrectly: #{e.message}"
+    end
   end
 
   def []( *all, &prc)

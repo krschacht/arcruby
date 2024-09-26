@@ -82,20 +82,19 @@ class Array
   end
 
   def ~
-    (fn, *args) = -self
+    (fn_or_table, *args) = -self
 
-    raise "The first element of the array-proc was a #{fn.class} which is not a symbol or a proper fn." unless fn.is_a?(Fn)
-    if fn.name == :df || fn.name == :each || %w[if unless].include?(fn.name.to_s.split('_').first)
-      args = args[0...-1].map { |a| a.class == ArrayProc ? ~a : a } << args.last
+    if fn_or_table.is_a?(Fn)
+      execute_fn(fn_or_table, args)
+    elsif fn_or_table.is_a?(Table)
+      execute_table(fn_or_table, args.first)
     else
-      args = args.map { |a| a.class == ArrayProc ? ~a : a }
+      raise "The first element of the array-proc was a #{fn_or_table.class} which is not a symbol or a proper fn or a table."
     end
-    #binding.irb if fn.name == :each
-    fn[*args]
   end
 
   def class
-    if length >= 1 && (-self).first.is_a?(Fn)
+    if length >= 1 && [Fn, Table].include?((-self).first.class)
       ArrayProc
     else
       super
@@ -103,6 +102,19 @@ class Array
   end
 
   private
+
+  def execute_fn(fn, args)
+    if fn.name == :df || fn.name == :fn || fn.name == :each || %w[if unless].include?(fn.name.to_s.split('_').first)
+      args = args[0...-1].map { |a| a.class == ArrayProc ? ~a : a } << args.last
+    else
+      args = args.map { |a| a.class == ArrayProc ? ~a : a }
+    end
+    fn[*args]
+  end
+
+  def execute_table(table, key)
+    table[key]
+  end
 
   def remaining_args
     self.drop(1).reduce([]) { |arr, a| arr += a.is_a?(Hash) ? Array(a).flatten : [a] }

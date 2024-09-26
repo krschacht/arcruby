@@ -1,20 +1,23 @@
 #!/usr/bin/env ruby
-
 require "./lib/brackets"
 
 # (= postdir* "arc/posts/"  maxid* 0  posts* (table))
-~[:set, :@postdir, "arc/posts/",  :@maxid, 0,  :@posts, nil]
+~[:set, :@postdir, "arc/posts/",  :@maxid, 0,  :@posts, [table]]
 
 # (= blogtitle* "A Blog")
 ~[:set, :@blogtitle, "A Blog"]
 
 # (deftem post  id nil  title nil  text nil)
-~[:dftem, :post,  :id, nil,  :title, nil,  :text, nil]
+~[:dftem, :POST,  :id, nil,  :title, nil,  :text, nil]
 
 # (def load-posts ()
 #   (each id (map int (dir postdir*))
 #     (= maxid*      (max maxid* id)
 #        (posts* id) (temload 'post (string postdir* id)))))
+~[:df, :load_posts, [],
+  [:each, :id, [:map, int, [:dir, @postdir]],
+               [:set, :@maxid,       [:max, :@maxid, :id],
+                      [@posts, :id], [:temload, :POST, [:string, @postdir, :id]]]]]
 
 # (def save-post (p) (save-table p (string postdir* p!id)))
 ~[:df, :save_post, :p, [save_table, :p, [string, @postdir, :'p.id']]]

@@ -246,13 +246,12 @@ fn_proc = ->(name, vars, o = nil, &block) {
     raise "Invalid fn. Accepted forms are fn[:concat, [:a,:b], [string, :a, :b]] or fn[:concat, [:a,:b], 'a + b'] or fn[:concat, [:a,:b]] { _1 + _2 }"
   end
 }
-df_set(:fn, fn_proc)
-#local_variable_set(:fn, Df.new(:fn) { |*args| [:fn, *args] })
-local_variable_set(:fn, fn_proc)
-df_set(:valid_method_name?, fn[:valid_method_name?, [:name],      '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*[!?=]?\z/)'])
-df_set(:valid_variable_name?, fn[:valid_variable_name?, [:name],  '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*\z/)']) # cannot end with !, ?, or =.
-df_set(:is_keyword?, fn[:is_keyword?, [:name], '%w{__FILE__ __LINE__ alias and begin BEGIN break case class def defined? do else elsif end END ensure false for if in module next nil not or redo rescue retry return self super then true undef unless until when while yield}.include? name'])
-df_set(:full_method_set?, fn[:full_method_set, [:name]] {
+df_set(:fn, Fn.new(:fn) { |*all| fn_proc[*all] })
+local_variable_set(:fn, Df.new(:fn) { |*args| [:fn, *args] })
+df_set(:valid_method_name?, fn_proc[:valid_method_name?, [:name],      '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*[!?=]?\z/)'])
+df_set(:valid_variable_name?, fn_proc[:valid_variable_name?, [:name],  '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*\z/)']) # cannot end with !, ?, or =.
+df_set(:is_keyword?, fn_proc[:is_keyword?, [:name], '%w{__FILE__ __LINE__ alias and begin BEGIN break case class def defined? do else elsif end END ensure false for if in module next nil not or redo rescue retry return self super then true undef unless until when while yield}.include? name'])
+df_set(:full_method_set?, fn_proc[:full_method_set, [:name]] {
     name = it
     local_variable_set(name, Df.new(name) { |*args| [name, *args] })
 
@@ -266,12 +265,12 @@ df_set(:full_method_set?, fn[:full_method_set, [:name]] {
 })
 #~df_get(:full_method_set)[:fn]
 
-df_set(:df, fn[:df, [:names, :vars, :o, :proc]] {
+df_set(:df, fn_proc[:df, [:names, :vars, :o, :proc]] {
   names = _1; vars = _2; o = _3; blk = _4
   names = Array(names).map(&:to_sym)
   names.each do |name|
     #raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].native_array_method?(name)
-    df_set name, fn[name, vars, o, &blk]
+    df_set name, fn_proc[name, vars, o, &blk]
     df_get(:full_method_set?)[name]  if df_get(:valid_variable_name?)[name] && ! df_get(:is_keyword?)[name] # && ! [].native_array_method?(name)
   end
   df_get(names.first)

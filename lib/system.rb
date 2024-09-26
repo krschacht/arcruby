@@ -1,3 +1,5 @@
+require_relative 'system/table'
+require_relative 'system/table_value'
 require_relative 'system/df'
 require_relative 'system/fn'
 require_relative 'system/fn_n'
@@ -17,14 +19,14 @@ require_relative 'system/fn_factory'
 ~[:df, :sym, :s, 's.to_sym' ]
 ~[:df, :ivar_set, [:key, :val], 'TOPLEVEL_BINDING.eval("self").instance_variable_set(key.to_s, val)' ]
 ~[:df, :const_set, [:key, :val], 'Object.const_set(~upcase[key], val)' ]
+~[:df, :const_get, [:key], 'Object.const_get(~upcase[key])' ]
 ~[:df, :struct, :args, 'args = args.flatten; Struct.new(*args.each_slice(2).map(&:first)) do; define_method(:initialize) do |*fields|; super(*args.each_slice(2).map { |_, default| default }.zip(fields).map { |default, arg| arg.nil? ? default : arg }); end; end' ]
-~[:df, :set, :args, 'args.each_slice(2) {|k,v| TOPLEVEL_BINDING.eval("self").instance_variable_set(k,v)}' ]
+~[:df, :set, :args, 'args.each_slice(2) {|k,v| k.is_a?(TableValue) ? k.set(v) : TOPLEVEL_BINDING.eval("self").instance_variable_set(k,v)}' ]
 ~[:df, :dir_exists, :path, 'Dir.exist?(path)' ]
 ~[:df, :if_true, [:val, :block], 'val && ~block' ]
 ~[:df, :if_false, [:val, :block], '!val && ~block' ] # this does not except macros
 ~[:df, :unless_true, [:val, :block], '!val && ~block' ]
 ~[:df, :unless_false, [:val, :block], 'val && ~block' ]
-
 
 # DEBUG = false
 

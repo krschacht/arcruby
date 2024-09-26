@@ -1,1 +1,1 @@
-((title "Once upon a time") (id 1) (text "This is the text of a post.\r\n\r\nHow does it handle new paragraphs?"))
+{:id=>1, :title=>"First post", :text=>"This is the first post"}
