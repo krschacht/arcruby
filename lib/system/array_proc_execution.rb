@@ -82,14 +82,16 @@ class Array
   end
 
   def ~
-    (fn_or_table, *args) = -self
+    (first_elem, *args) = -self
 
-    if fn_or_table.is_a?(Fn)
-      execute_fn(fn_or_table, args)
-    elsif fn_or_table.is_a?(Table)
-      execute_table(fn_or_table, args.first)
+    if first_elem.is_a?(Fn)
+      execute_fn(first_elem, args)
+    elsif first_elem.class == ArrayProc
+      execute_fn(method_get(:progn), [[first_elem, *args]])
+    elsif first_elem.is_a?(Table)
+      execute_table(first_elem, args.first)
     else
-      raise "The first element of the array-proc was a #{fn_or_table.class} which is not a symbol or a proper fn or a table."
+      raise "The first element of the array-proc was a #{first_elem.class} which is not a symbol, proper fn, list of array-procs, or a table."
     end
   end
 
@@ -113,7 +115,7 @@ class Array
   end
 
   def execute_table(table, key)
-    table[key]
+    table[key.class == ArrayProc ? ~key : key]
   end
 
   def remaining_args
