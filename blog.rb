@@ -23,6 +23,7 @@ require "./lib/brackets"
 ~[:df, :save_post, :p, [save_table, :p, [string, @postdir, :'p.id']]]
 
 # (def post (id) (posts* (errsafe:int id)))
+~[:df, :post, :id, [@posts, [int, :id]]]  # not sure what errsafe should do
 
 # (mac blogpage body
 #   `(whitepage
@@ -45,9 +46,6 @@ require "./lib/brackets"
 # (def permalink (p) (string "viewpost?id=" p!id))
 ~[:df, :permalink, :p, [:string, 'viewpost?id=', :'p.id']]
 binding.irb; exit
-
-
-
 
 # (def post-page (user p) (blogpage (display-post user p)))
 
@@ -100,3 +98,9 @@ binding.irb; exit
 #   (ensure-dir postdir*)
 #   (load-posts)
 #   (asv))
+
+~[df, bsv, [],
+  [ensure_dir, @postdir],
+  [load_posts],
+  [prn, 'launching webserver']
+]
