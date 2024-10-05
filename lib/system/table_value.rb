@@ -2,14 +2,26 @@
 #
 
 class TableValue
-  attr_reader :table
-  attr_reader :value
-  def initialize(table, any)
-    @table = table
+
+  def initialize(key, any)
+    @key = key
     @value = any
   end
 
-  def set(new_value)
+  def _(new_value)
     @value = new_value
+    self
+  end
+
+  def __
+    @key
+  end
+
+  def method_missing(method_name, *arguments, &block)
+    @value[method_name]
+  end
+
+  def inspect
+    "[#{@key.inspect}]#{@value}"
   end
 end

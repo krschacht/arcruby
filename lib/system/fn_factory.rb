@@ -221,7 +221,7 @@ fn_proc = ->(name, vars, o = nil, &block) {
     s = <<-RUBY # TODO: Make var subsitute work with :"p.id"  ———  It almost works, but the .last _attr is incorrect for _attr[:cat]
       _basevar = ->(name) { name.to_s.split('.').first }
       _attr = ->(name) { name.to_s.split('.').last if name.to_s.include?('.') }
-      _getvar = ->(name, context) { v = context.local_variable_get(_basevar[name]) ; attr = _attr[name]; attr ? (v.is_a?(TableValue) ? v.value.send(attr.to_sym) : v.send(attr.to_sym)) : v }
+      _getvar = ->(name, context) { v = context.local_variable_get(_basevar[name]) ; attr = _attr[name]; attr ? v.send(attr.to_sym) : v }
       _vars_substitute = ->(arr, context) { arr.map { |v| v.is_a?(Array) ? _vars_substitute[v, context] : (v.is_a?(Symbol) && context.local_variables.include?(_basevar[v].to_sym) ? _getvar[v, context] : v) } }
 
       Fn.new(name) { |*all|
