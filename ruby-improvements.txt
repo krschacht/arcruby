@@ -2,8 +2,10 @@
 * Let me override "" string declarations
 * Let me override %w[ .. ] and all it's variations (like I can with backticks)
 * Let me override %[ ]
-* Let me declare more prefix methods on a class (like ~ but more arbitrary characters)
 * Variable names should support all the same characters as method names (eg. !, ?, =, etc)
+
+* Let me declare more prefix methods on a class (like ~ but more arbitrary characters)
 * Symbols should support all the same characters as strings, or at least :=
 * Let me dynamically declare local variables. I should be able to use local_variable_set in the main namespace (I had to do a hack with define attributes)
 * Expand the potential uses of (), maybe even let me override those (similar to [])
+* I want to be able to dynamically get the source code of a ruby method.
