@@ -2,7 +2,7 @@
 require "./lib/brackets"
 
 # (= postdir* "arc/posts/"  maxid* 0  posts* (table))
-~[:set, :@postdir, "arc/posts/",  :@maxid, 0,  :@posts, [table]]
+~[:set, :@postdir, "rocket/posts/",  :@maxid, 0,  :@posts, [table]]
 
 # (= blogtitle* "A Blog")
 ~[:set, :@blogtitle, "A Blog"]
@@ -45,7 +45,6 @@ require "./lib/brackets"
 
 # (def permalink (p) (string "viewpost?id=" p!id))
 ~[:df, :permalink, :p, [:string, 'viewpost?id=', :'p.id']]
-binding.irb; exit
 
 # (def post-page (user p) (blogpage (display-post user p)))
 
@@ -99,8 +98,9 @@ binding.irb; exit
 #   (load-posts)
 #   (asv))
 
-~[df, bsv, [],
+~[df, :bsv, [], [progn,
   [ensure_dir, @postdir],
   [load_posts],
-  [prn, 'launching webserver']
-]
+  [asv]]]
+
+binding.irb
