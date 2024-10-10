@@ -106,7 +106,7 @@ class Array
   private
 
   def execute_fn(fn, args)
-    if fn.name == :df || fn.name == :fn || fn.name == :each || %w[if unless].include?(fn.name.to_s.split('_').first)
+    if fn.name == :df || fn.name == :fn || fn.name == :each || fn.name == :dfop || %w[if unless].include?(fn.name.to_s.split('_').first)
       args = args[0...-1].map { |a| a.class == ArrayProc ? ~a : a } << args.last
     else
       args = args.map { |a| a.class == ArrayProc ? ~a : a }

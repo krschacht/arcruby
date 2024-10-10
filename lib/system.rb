@@ -14,6 +14,7 @@ require_relative 'system/fn_factory'
 #require_relative 'system/suffix_array_fn'
 
 ~[:df, :sys, :cmd, 'system(cmd)' ]
+~[:df, :load, :file, 'require_relative(file)' ]
 ~[:df, :progn, :lst, 'lst.map { ~it }.last' ]
 ~[:df, :evl, :s, 'eval(s)' ]
 ~[:df, :upcase, :s, 's.to_s.upcase' ]

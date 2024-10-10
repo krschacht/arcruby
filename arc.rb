@@ -5,7 +5,7 @@
 ~[:df, :string, :args, 'args.join' ]
 ~[:df, :int, :s, 's.to_i' ]
 ~[:df, :map, [:df_or_fn, :lst], 'lst.map { |item| df_or_fn.is_a?(Fn) ? df_or_fn[item] : ~df_or_fn[item] }' ] # ~[:map, [fn, [:x], 'x+1'], [1, 2, 3]]   and also:   ~[:map, int, ['1', '2', '3']]  TODO: Should I make it work with a symbol?  ~[:map, :int, ['1', '2', '3']]
-~[:df, :each, [:var, :list, :block], [map, [fn, :var, :block], :list] ] # TODO: change this to [:fn, ...] # ~[:each, :name, ['keith', 'pari'], [:prn, [:string, 'hello ', :name]]]
+~[:df, :each, [:var, :list, :block], [map, [fn, :var, :block], :list] ] # TODO: change this to [:fn, ...]    # ~[:each, :name, ['keith', 'pari'], [:prn, [:string, 'hello ', :name]]]
 ~[:df, :max, [:args], 'args.map { |i| i.is_a?(Symbol) ? TOPLEVEL_BINDING.eval("self").instance_variable_get(i) : i }.max' ]
 ~[:df, :min, [:args], 'args.map { |i| i.is_a?(Symbol) ? TOPLEVEL_BINDING.eval("self").instance_variable_get(i) : i }.min' ]
 ~[:df, :pair, :args, 'args.flatten.each_slice(2).to_a' ]
