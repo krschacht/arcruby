@@ -1,3 +1,4 @@
+require_relative 'system/custom_eval'
 require_relative 'system/table'
 require_relative 'system/table_value'
 require_relative 'system/df'
@@ -15,8 +16,8 @@ require_relative 'system/fn_factory'
 
 ~[:df, :sys, :cmd, 'system(cmd)' ]
 ~[:df, :load, :file, 'require_relative(file)' ]
-~[:df, :progn, :lst, 'lst.map { ~it }.last' ]
-~[:df, :evl, :s, 'eval(s)' ]
+~[:df, :progn, :lst, 'lst.map { it.class == ArrayProc ? ~it : raise("progn called on array which was not exclusively array-procs") }.last' ]
+~[:df, :evl, :s, 'custom_eval(s)' ]
 ~[:df, :upcase, :s, 's.to_s.upcase' ]
 ~[:df, :sym, :s, 's.to_sym' ]
 ~[:df, :ivar_set, [:key, :val], 'TOPLEVEL_BINDING.eval("self").instance_variable_set(key.to_s, val)' ]

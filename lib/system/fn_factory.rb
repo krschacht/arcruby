@@ -190,7 +190,7 @@ fn_proc = ->(name, vars, o = nil, &block) {
         }[*all]
       }
     RUBY
-    eval(s)
+    custom_eval(s, binding)
 
   in String if block.nil?
     _vars = vars
@@ -207,12 +207,12 @@ fn_proc = ->(name, vars, o = nil, &block) {
               _context.local_variable_set(v, all[i])
             end
           end
-          result = eval(_o, _context)
+          result = custom_eval(_o, _context)
           result.class == ArrayProc ? ~result : result
         }[*all]
       }
     RUBY
-    eval(s)
+    custom_eval(s, binding)
 
   in [_fn, *_rest] # no guards needed because we did -o above to normalize the array-proc form
     raise "Invalid fn. The body of the method was an array but not an array-proc." if o.class != ArrayProc
@@ -239,7 +239,7 @@ fn_proc = ->(name, vars, o = nil, &block) {
         }[*all]
       }
     RUBY
-    eval(s)
+    custom_eval(s, binding)
 
   else
     binding.irb
