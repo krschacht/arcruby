@@ -76,6 +76,8 @@ class Array
       else
         self
       end
+    in Array => e if e.is_a?(ArrayProc)  # I cannot get a simple "in ArrayProc" to work
+      [~elem, *remaining_args]
     else
       self
     end
@@ -96,10 +98,38 @@ class Array
   end
 
   def class
-    if length >= 1 && [Fn, Table].include?((-self).first.class)
+    if length >= 1 && [Fn, Table].include?((-self).first.class) # the first element of -[] is either Fn or Table
       ArrayProc
     else
       super
+    end
+  end
+
+  alias_method :original_instance_of?, :instance_of?
+  def instance_of?(klass)
+    klass == ArrayProc ? self.class == ArrayProc : original_instance_of?(klass)
+  end
+
+  alias_method :original_kind_of?, :kind_of?
+  def kind_of?(klass)
+    klass == ArrayProc ? self.class <= ArrayProc : original_kind_of?(klass)
+  end
+
+  alias_method :original_is_a?, :is_a?
+  def is_a?(klass)
+    klass == ArrayProc ? self.class <= ArrayProc : original_is_a?(klass)
+  end
+
+  alias_method :original_triple_equal, :===
+  def ===(other)
+    self.is_a?(ArrayProc) || original_triple_equal(other)
+  end
+
+  def fn
+    if (the_fn = (-self).first).is_a?(Fn)
+      the_fn
+    else
+      nil
     end
   end
 
