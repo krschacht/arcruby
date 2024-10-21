@@ -4,8 +4,8 @@
 ~[:df, :last, :lst, 'lst.last' ]
 ~[:df, :string, :args, 'args.join' ]
 ~[:df, :int, :s, 's.to_i' ]
-~[:df, :map, [:df_or_fn, :lst], 'lst.map { |item| df_or_fn.is_a?(Fn) ? df_or_fn[item] : ~df_or_fn[item] }' ] # ~[:map, [fn, [:x], 'x+1'], [1, 2, 3]]   and also:   ~[:map, int, ['1', '2', '3']]  TODO: Should I make it work with a symbol?  ~[:map, :int, ['1', '2', '3']]
-~[:df, :each, [:var, :list, :block], [map, [fn, :var, :block], :list] ] # TODO: change this to [:fn, ...]    # ~[:each, :name, ['keith', 'pari'], [:prn, [:string, 'hello ', :name]]]
+~[:mac, :map, [:df_or_fn, :lst], 'lst = ~lst if lst.class == ArrayProc; lst.map { |item| ~[df_or_fn, item] }' ] # ~[map, [fn, [:x], 'x+1'], [1, 2, 3]]   and also:   ~[:map, int, ['1', '2', '3']]  and also:   ~[map, int, [:dir, @postdir]]   TODO: Should I make it work with a symbol?  ~[:map, :int, ['1', '2', '3']]
+~[:mac, :each, [:var, :list, :block], [map, [fn, :var, :block], :list] ] # TODO: change this to [:fn, ...]    # ~[:each, :name, ['keith', 'pari'], [:prn, [:string, 'hello ', :name]]]
 ~[:df, :max, [:args], 'args.map { |i| i.is_a?(Symbol) ? TOPLEVEL_BINDING.eval("self").instance_variable_get(i) : i }.max' ]
 ~[:df, :min, [:args], 'args.map { |i| i.is_a?(Symbol) ? TOPLEVEL_BINDING.eval("self").instance_variable_get(i) : i }.min' ]
 ~[:df, :pair, :args, 'args.flatten.each_slice(2).to_a' ]
@@ -17,7 +17,30 @@
 ~[:df, :read, [:file], 'File.read(file)']
 ~[:df, :templatize, [:tem, :lst], 'Object.const_get(tem).new(*lst.values)']
 ~[:df, :temload, [:tem, :file], [templatize, :tem, [evl, [read, :file]]]]
-# ~[:each, :i, [1,2,3],
+~[:df, :atom, :s, '!s.is_a?(Array)']
+
+
+# (mac with (parms . body)
+#   `((fn ,(map1 car (pair parms))
+#      ,@body)
+#     ,@(map1 cadr (pair parms))))
+
+# (mac let (var val . body)
+#   `(with (,var ,val) ,@body))
+
+# ~[:df, :with, [:parms, :args],
+#   [fn, [map, car, [pair, :parms]],
+#     :args],
+#     [map, cdr, [pair, :parms]]]
+
+# ~[:mac, :with, [:parms, :args],
+#   [fn, [map, car, [pair, :parms]],
+#     :args],
+#     [map, cdr, [pair, :parms]]]
+
+# ~[:df, [:var, :val, :args], [with, [:var, :val], :args]]
+
+
 
 # fn[]
 # (mac each (var expr . body) `(map (fn (,var) ,@body) ,expr))

@@ -25,12 +25,12 @@ require_relative 'system/fn_factory'
 ~[:df, :const_set, [:key, :val], 'Object.const_set(~upcase[key], val)' ]
 ~[:df, :const_get, [:key], 'Object.const_get(~upcase[key])' ]
 ~[:df, :struct, :args, 'args = args.flatten; Struct.new(*args.each_slice(2).map(&:first)) do; define_method(:initialize) do |*fields|; super(*args.each_slice(2).map { |_, default| default }.zip(fields).map { |default, arg| arg.nil? ? default : arg }); end; end' ]
-~[:df, :set, :args, 'args.each_slice(2) {|k,v| k.is_a?(TableValue) ? k._(v) : TOPLEVEL_BINDING.eval("self").instance_variable_set(k,v)}' ]
+~[:df, :set, :args, 'args.each_slice(2) { |k,v| k.is_a?(TableValue) ? k._(v) : TOPLEVEL_BINDING.eval("self").instance_variable_set(k,v) }' ]
 ~[:df, :dir_exists, :path, 'Dir.exist?(path)' ]
-~[:df, :if_true, [:val, :block], 'val ? ~block : false' ]
-~[:df, :if_false, [:val, :block], '!val ? ~block : true' ] # this does not except macros
-~[:df, :unless_true, [:val, :block], '!val && ~block' ]
-~[:df, :unless_false, [:val, :block], 'val && ~block' ]
+~[:mac, :if_true, [:val, :args], 'val ? ~args[0] : (args[1] ? ~args[1] : false)' ]
+~[:mac, :if_false, [:val, :args], '!val ? ~args[0] : (args[1] ? ~args[1] : true)' ]
+~[:mac, :unless_true, [:val, :args], '!val ? ~args[0] : (args[1] ? ~args[1] : true)' ]
+~[:mac, :unless_false, [:val, :args], 'val ? ~args[0] : (args[1] ? ~args[1] : false)' ]
 
 # DEBUG = false
 
