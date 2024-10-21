@@ -16,4 +16,4 @@
 #          (defop-raw ,name (,gs ,parm)
 #            (w/stdout ,gs (prn) ,@body)))))
 
-~[:df, :dfop, [:name, :parm, :body], [progn, [[prn, 'hello'], :body]]] # should be defined using mac or lit but instead I just added another exclusion for dfop in array_proc_execution
+#~[:df, :dfop, [:name, :parm, :body], [progn, [prn, 'hello'], :body]]] # should be defined using mac or lit but instead I just added another exclusion for dfop in array_proc_execution

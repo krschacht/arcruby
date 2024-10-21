@@ -97,7 +97,7 @@ require "./lib/brackets"
 
 
 binding.irb
-~[dfop, :blog, :req, [prn, 'goodbye']]
+#~[dfop, :blog, :req, [prn, 'goodbye']]
 
 # TODO #1 Implement "let", it should look something like this:
 #

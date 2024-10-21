@@ -1,7 +1,7 @@
 # Syntax for defining a function (i.e. array-proc):
 #
-# df_set(:concat, fn[:concat, [:a, :b], 'a + b' ]); reverse = fn[:reverse, [:a, :b], [:concat, :b, :a]]; reverse['x','y']
-# df_set(:concat, fn[:concat, [:args], 'args.join' ]); same = fn[:same, [:args], [:concat, :args]]; same['x','y']
+# fn_set(:concat, fn[:concat, [:a, :b], 'a + b' ]); reverse = fn[:reverse, [:a, :b], [:concat, :b, :a]]; reverse['x','y']
+# fn_set(:concat, fn[:concat, [:args], 'args.join' ]); same = fn[:same, [:args], [:concat, :args]]; same['x','y']
 #
 # concat = fn[:concat, [:a, :b], 'a + b' ]; concat['x','y']
 # concat = fn[:concat, [:args],  'args.join' ]; concat['x','y','z']
@@ -141,7 +141,7 @@
 
 # TODO: Make fn work like this: ~[:fn, ...]. When I do I'll need to fix the map definnition to do ~func[]
 
-fn_proc = ->(name, vars, o = nil, &block) {
+core_proc = ->(klass, name, vars, o = nil, &block) {
   # if name.is_a?(Array) # allow name to be left off for anonymous functions
   #   o = vars
   #   vars = name
@@ -166,8 +166,9 @@ fn_proc = ->(name, vars, o = nil, &block) {
   o = -o if o.is_a?(Array)
 
   raise "Using both :prc and :args in a method definition is not supported." if vars.include?(:args) && vars.include?(:proc)
-  raise "When using :args it must be the last parameter." if vars.include?(:args) && vars.index(:args) != vars.length-1
   raise "When using :proc it must be the last parameter." if vars.include?(:proc) && vars.index(:proc) != vars.length-1
+  raise "When using :args it must be the last parameter." if vars.include?(:args) && vars.index(:args) != vars.length-1
+  # TODO: Add support for range operator so args can have custom names, e.g. [:first, :second .. :rest], we can parse any range with .first and .last
 
   case o # create a proc which looks like a method call but it simply returns the proper array-proc form
 
@@ -175,10 +176,10 @@ fn_proc = ->(name, vars, o = nil, &block) {
     _vars = vars
     _block = block
     s = <<-RUBY
-      Fn.new(name) { |*all|
+      klass.new(name) { |*all|
         ->(#{args}) {
           _context = Class.new { def new_binding = binding }.new.new_binding
-          $all_df_defined.each { |v, p| _context.local_variable_set(v, TOPLEVEL_BINDING.local_variable_get(v)) if !v.to_s.include?('?') && v != name }
+          $all_fn_defined.each { |v, p| _context.local_variable_set(v, TOPLEVEL_BINDING.local_variable_get(v)) if !v.to_s.include?('?') && v != name }
           _vars.each_with_index do |v, i|
             if v == :args
               _context.local_variable_set(v, all[i..])
@@ -196,10 +197,10 @@ fn_proc = ->(name, vars, o = nil, &block) {
     _vars = vars
     _o = o
     s = <<-RUBY
-      Fn.new(name) { |*all|
+      klass.new(name) { |*all|
         ->(#{args}) {
           _context = Class.new { def new_binding = binding }.new.new_binding
-          $all_df_defined.each { |v, p| _context.local_variable_set(v, TOPLEVEL_BINDING.local_variable_get(v)) if !v.to_s.include?('?') && v != name }
+          $all_fn_defined.each { |v, p| _context.local_variable_set(v, TOPLEVEL_BINDING.local_variable_get(v)) if !v.to_s.include?('?') && v != name }
           _vars.each_with_index do |v, i|
             if v == :args
               _context.local_variable_set(v, all[i..])
@@ -224,10 +225,10 @@ fn_proc = ->(name, vars, o = nil, &block) {
       _getvar = ->(name, context) { v = context.local_variable_get(_basevar[name]) ; attr = _attr[name]; attr ? v.send(attr.to_sym) : v }
       _vars_substitute = ->(arr, context) { arr.map { |v| v.is_a?(Array) ? _vars_substitute[v, context] : (v.is_a?(Symbol) && context.local_variables.include?(_basevar[v].to_sym) ? _getvar[v, context] : v) } }
 
-      Fn.new(name) { |*all|
+      klass.new(name) { |*all|
         ->(#{args}) {
           _context = Class.new { def new_binding = binding }.new.new_binding
-          $all_df_defined.each { |v, p| _context.local_variable_set(v, TOPLEVEL_BINDING.local_variable_get(v)) if !v.to_s.include?('?') && v != name }
+          $all_fn_defined.each { |v, p| _context.local_variable_set(v, TOPLEVEL_BINDING.local_variable_get(v)) if !v.to_s.include?('?') && v != name }
           _vars.each_with_index do |v, i|
             if v == :args
               _context.local_variable_set(v, all[i..])
@@ -246,36 +247,52 @@ fn_proc = ->(name, vars, o = nil, &block) {
     raise "Invalid fn. Accepted forms are fn[:concat, [:a,:b], [string, :a, :b]] or fn[:concat, [:a,:b], 'a + b'] or fn[:concat, [:a,:b]] { _1 + _2 }"
   end
 }
-df_set(:fn, Fn.new(:fn) { |*all| fn_proc[*all] })
+fn_set(:fn, Fn.new(:fn) { |*all| core_proc[Fn, *all] })
 local_variable_set(:fn, Df.new(:fn) { |*args| [:fn, *args] })
-df_set(:valid_method_name?, fn_proc[:valid_method_name?, [:name],      '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*[!?=]?\z/)'])
-df_set(:valid_variable_name?, fn_proc[:valid_variable_name?, [:name],  '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*\z/)']) # cannot end with !, ?, or =.
-df_set(:is_keyword?, fn_proc[:is_keyword?, [:name], '%w{__FILE__ __LINE__ alias and begin BEGIN break case class def defined? do else elsif end END ensure false for if in module next nil not or redo rescue retry return self super then true undef unless until when while yield}.include? name'])
-df_set(:full_method_set?, fn_proc[:full_method_set, [:name]] {
+
+fn_set(:mac_fn, MacFn.new(:mac_fn) { |*all| core_proc[MacFn, *all] })
+local_variable_set(:mac_fn, Df.new(:mac_fn) { |*args| [:mac_fn, *args] })
+
+fn_set(:valid_method_name?, core_proc[Fn, :valid_method_name?, [:name],      '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*[!?=]?\z/)'])
+fn_set(:valid_variable_name?, core_proc[Fn, :valid_variable_name?, [:name],  '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*\z/)']) # cannot end with !, ?, or =.
+fn_set(:is_keyword?, core_proc[Fn, :is_keyword?, [:name], '%w{__FILE__ __LINE__ alias and begin BEGIN break case class def defined? do else elsif end END ensure false for if in module next nil not or redo rescue retry return self super then true undef unless until when while yield}.include? name'])
+fn_set(:full_method_set?, core_proc[Fn, :full_method_set, [:name]] {
     name = it
     local_variable_set(name, Df.new(name) { |*args| [name, *args] })
 
     # Array.unfreeze_method(name)
     # Array.class_eval do
     #   define_method(name) do
-    #     [df_get(name), *self]
+    #     [fn_get(name), *self]
     #   end
     # end
     # Array.freeze_method(name)
 })
-#~df_get(:full_method_set)[:fn]
+#~fn_get(:full_method_set)[:fn]
 
-df_set(:df, fn_proc[:df, [:names, :vars, :o, :proc]] {
+fn_set(:df, core_proc[Fn, :df, [:names, :vars, :o, :proc]] {
   names = _1; vars = _2; o = _3; blk = _4
   names = Array(names).map(&:to_sym)
   names.each do |name|
     #raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].native_array_method?(name)
-    df_set name, fn_proc[name, vars, o, &blk]
-    df_get(:full_method_set?)[name]  if df_get(:valid_variable_name?)[name] && ! df_get(:is_keyword?)[name] # && ! [].native_array_method?(name)
+    fn_set name, core_proc[Fn, name, vars, o, &blk]
+    fn_get(:full_method_set?)[name]  if fn_get(:valid_variable_name?)[name] && ! fn_get(:is_keyword?)[name] # && ! [].native_array_method?(name)
   end
-  df_get(names.first)
+  fn_get(names.first)
 }
 )
 local_variable_set(:df, Df.new(:df) { |*args| [:df, *args] })
 
-#~df_get(:full_method_set)[:df]
+# mac is a type of df, specifically it's a df which wraps and contains MacFn's rather than Fn's
+fn_set(:mac, core_proc[Fn, :mac, [:names, :vars, :o, :proc]] {
+  names = _1; vars = _2; o = _3; blk = _4
+  names = Array(names).map(&:to_sym)
+  names.each do |name|
+    #raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].native_array_method?(name)
+    fn_set name, core_proc[MacFn, name, vars, o, &blk]
+    fn_get(:full_method_set?)[name]  if fn_get(:valid_variable_name?)[name] && ! fn_get(:is_keyword?)[name] # && ! [].native_array_method?(name)
+  end
+  fn_get(names.first)
+}
+)
+local_variable_set(:mac, Df.new(:mac) { |*args| [:mac, *args] })

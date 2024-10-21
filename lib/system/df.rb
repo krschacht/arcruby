@@ -33,6 +33,6 @@ class Df < Proc
   end
 
   def inspect
-    "::#{@name}"
+    "#{@name}[]"
   end
 end

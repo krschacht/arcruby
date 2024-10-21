@@ -2,9 +2,10 @@ require_relative 'system/custom_eval'
 require_relative 'system/table'
 require_relative 'system/table_value'
 require_relative 'system/df'
+require_relative 'system/mac_fn'
 require_relative 'system/fn'
 require_relative 'system/fn_n'
-require_relative 'system/df_set'
+require_relative 'system/fn_set'
 require_relative 'system/local_variable_set'
 #require_relative 'system/backticks'
 require_relative 'system/array_proc_execution'
@@ -16,7 +17,7 @@ require_relative 'system/fn_factory'
 
 ~[:df, :sys, :cmd, 'system(cmd)' ]
 ~[:df, :load, :file, 'require_relative(file)' ]
-~[:df, :progn, :lst, 'lst.map { it.class == ArrayProc ? ~it : raise("progn called on array which was not exclusively array-procs") }.last' ]
+~[:mac, :progn, :args, 'args.map.with_index { |item, i| item.class == ArrayProc ? ~item : raise("progn called on array which was not exclusively array-procs (index #{i} was #{item.class})") }.last' ]
 ~[:df, :evl, :s, 'custom_eval(s)' ]
 ~[:df, :upcase, :s, 's.to_s.upcase' ]
 ~[:df, :sym, :s, 's.to_sym' ]

@@ -11,7 +11,7 @@
 #
 # TESTS for -[]
 #
-# greet = Fn.new("greet") { [->{ [ ->{ "hello" }, :greet ]}] }; df_set(:greet, greet)
+# greet = Fn.new("greet") { [->{ [ ->{ "hello" }, :greet ]}] }; fn_set(:greet, greet)
 #
 # -[greet]
 # => [#<:greet>]
@@ -63,7 +63,7 @@ class Array
 
     in Df
       fn = method_get(elem.name)
-      if (fn.is_a?(Fn))
+      if (fn.is_a?(Fn) || fn.is_a?(MacFn))
         [fn, *remaining_args]
       else
         self
@@ -71,7 +71,7 @@ class Array
 
     in Symbol | String => s if s.is_a?(Symbol) || s.start_with?(":")
       fn = method_get(elem)
-      if (fn.is_a?(Fn))
+      if (fn.is_a?(Fn) || fn.is_a?(MacFn))
         [fn, *remaining_args]
       else
         self
@@ -86,19 +86,19 @@ class Array
   def ~
     (first_elem, *args) = -self
 
-    if first_elem.is_a?(Fn)
+    if first_elem.is_a?(Fn) || first_elem.is_a?(MacFn)
       execute_fn(first_elem, args)
     elsif first_elem.class == ArrayProc
       execute_fn(method_get(:progn), [[first_elem, *args]])
     elsif first_elem.is_a?(Table)
       execute_table(first_elem, args.first)
     else
-      raise "The first element of the array-proc was a #{first_elem.class} which is not a symbol, proper fn, list of array-procs, or a table."
+      raise "The first element of array-proc was a #{first_elem.class} which is not a symbol, proper fn, list of array-procs, or a table."
     end
   end
 
   def class
-    if length >= 1 && [Fn, Table].include?((-self).first.class) # the first element of -[] is either Fn or Table
+    if length >= 1 && [Fn, MacFn, Table].include?((-self).first.class) # the first element of -[] is either Fn or Table
       ArrayProc
     else
       super
@@ -136,9 +136,9 @@ class Array
   private
 
   def execute_fn(fn, args)
-    if fn.name == :df || fn.name == :fn || fn.name == :each || fn.name == :dfop || %w[if unless].include?(fn.name.to_s.split('_').first)
-      args = args[0...-1].map { |a| a.class == ArrayProc ? ~a : a } << args.last
-    else
+    # if fn.name == :df || fn.name == :fn || fn.name == :each || fn.name == :dfop || %w[if unless].include?(fn.name.to_s.split('_').first)
+    #   args = args[0...-1].map { |a| a.class == ArrayProc ? ~a : a } << args.last
+    if fn.name != :df && fn.name != :fn && fn.name != :mac_fn && fn.class != MacFn
       args = args.map { |a| a.class == ArrayProc ? ~a : a }
     end
     fn[*args]
@@ -153,6 +153,6 @@ class Array
   end
 
   def method_get(variable)
-    df_get(variable.to_s.gsub(":", "").to_sym)
+    fn_get(variable.to_s.gsub(":", "").to_sym)
   end
 end
