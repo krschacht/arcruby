@@ -250,9 +250,11 @@ core_proc = ->(klass, name, vars, o = nil, &block) {
 }
 fn_set(:fn, Fn.new(:fn) { |*all| core_proc[Fn, *all] })
 local_variable_set(:fn, Df.new(:fn) { |*args| [:fn, *args] })
+local_variable_set(:_fn, Df.new(:_fn) { |*args| [:_fn, *args] })
 
 fn_set(:mac_fn, MacFn.new(:mac_fn) { |*all| core_proc[MacFn, *all] })
 local_variable_set(:mac_fn, Df.new(:mac_fn) { |*args| [:mac_fn, *args] })
+local_variable_set(:_mac_fn, Df.new(:_mac_fn) { |*args| [:_mac_fn, *args] })
 
 fn_set(:valid_method_name?, core_proc[Fn, :valid_method_name?, [:name],      '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*[!?=]?\z/)'])
 fn_set(:valid_variable_name?, core_proc[Fn, :valid_variable_name?, [:name],  '!!(name.to_s =~ /\A[a-z_][a-zA-Z_0-9]*\z/)']) # cannot end with !, ?, or =.
@@ -274,6 +276,8 @@ fn_set(:full_method_set?, core_proc[Fn, :full_method_set, [:name]] {
 fn_set(:df, core_proc[Fn, :df, [:names, :vars, :o, :proc]] {
   names = _1; vars = _2; o = _3; blk = _4
   names = Array(names).map(&:to_sym)
+  names.each { |name| raise "df names cannot begin with an underscore" if name[0] == "_" }
+  names = names.map { |n| [n, "_#{n}".to_sym ] }.flatten
   names.each do |name|
     #raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].native_array_method?(name)
     fn_set name, core_proc[Fn, name, vars, o, &blk]
@@ -283,11 +287,14 @@ fn_set(:df, core_proc[Fn, :df, [:names, :vars, :o, :proc]] {
 }
 )
 local_variable_set(:df, Df.new(:df) { |*args| [:df, *args] })
+local_variable_set(:_df, Df.new(:_df) { |*args| [:_df, *args] })
 
 # mac is a type of df, specifically it's a df which wraps and contains MacFn's rather than Fn's
 fn_set(:mac, core_proc[Fn, :mac, [:names, :vars, :o, :proc]] {
   names = _1; vars = _2; o = _3; blk = _4
   names = Array(names).map(&:to_sym)
+  names.each { |name| raise "mac names cannot begin with an underscore" if name[0] == "_" }
+  names = names.map { |n| [n, "_#{n}".to_sym ] }.flatten
   names.each do |name|
     #raise "The name '#{name}' is a reserved word and cannot be declared as an Fn" if [].native_array_method?(name)
     fn_set name, core_proc[MacFn, name, vars, o, &blk]
@@ -297,3 +304,4 @@ fn_set(:mac, core_proc[Fn, :mac, [:names, :vars, :o, :proc]] {
 }
 )
 local_variable_set(:mac, Df.new(:mac) { |*args| [:mac, *args] })
+local_variable_set(:_mac, Df.new(:_mac) { |*args| [:_mac, *args] })

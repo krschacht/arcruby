@@ -33,6 +33,8 @@ require_relative 'system/fn_factory'
 ~[:mac, :unless_true, [:val, :args], '!val ? ~args[0] : (args[1] ? ~args[1] : true)' ]
 ~[:mac, :unless_false, [:val, :args], 'val ? ~args[0] : (args[1] ? ~args[1] : false)' ]
 
+~[:df, :add, [:x, :y], 'x + y' ]
+
 # DEBUG = false
 
 # if DEBUG

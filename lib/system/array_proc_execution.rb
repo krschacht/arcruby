@@ -126,7 +126,9 @@ class Array
 
   def execute_fn(fn, args)
     if fn.name != :df && fn.name != :mac && fn.name != :fn && fn.name != :mac_fn && fn.class != MacFn
-      args = args.map { |a| a.class == ArrayProc ? ~a : a }
+      args = args.flat_map do |a|
+        a.class == ArrayProc ? (a.fn.name[0] == "_" ? ~a : [~a]) : [a]
+      end # e.g. ~[add, [_map, int, [:dir, @postdir]]]
     end
     fn[*args]
   end
