@@ -10,7 +10,7 @@
 ~[:df, :min, [:args], 'args.map { |i| i.is_a?(Symbol) ? TOPLEVEL_BINDING.eval("self").instance_variable_get(i) : i }.min' ]
 ~[:df, :pair, :args, 'args.flatten.each_slice(2).to_a' ]
 ~[:df, :dftem, [:name, :args], [:const_set, :name, [:struct, :args]]]
-~[:df, :ensure_dir, :path, [if_false, [dir_exists, :path], [sys, [string, 'mkdir -p ', :path]]]]
+~[:df, :ensure_dir, :path, [if_true, :path, [if_false, [dir_exists, :path], [sys, [string, 'mkdir -p ', :path]]], [:err, "No path was provided to ensure_dir"]]]
 ~[:df, :writefile, [:val, :file], 'tmpfile = "#{file}.tmp"; dir = File.dirname(tmpfile); ~ensure_dir[dir]; File.open(tmpfile, "w") { |o| o.write(val) }; File.rename(tmpfile, file); val']
 ~[:df, :tablist, :obj, 'obj.to_h']
 ~[:df, :save_table, [:h, :file], [writefile, [tablist, :h], :file]]

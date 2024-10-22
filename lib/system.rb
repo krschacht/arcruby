@@ -1,4 +1,5 @@
 require_relative 'system/custom_eval'
+require_relative 'system/try'
 require_relative 'system/table'
 require_relative 'system/table_value'
 require_relative 'system/df'

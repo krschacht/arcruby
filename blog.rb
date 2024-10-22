@@ -15,7 +15,7 @@ require "./lib/brackets"
 #     (= maxid*      (max maxid* id)
 #        (posts* id) (temload 'post (string postdir* id)))))
 ~[df, :load_posts, [],
-  [:each, :id, [map, int, [:dir, @postdir]],
+  [each, :id, [map, int, [:dir, @postdir]],
                [set, :@maxid,       [max, :@maxid, :id],
                       [@posts, :id], [temload, :POST, [string, @postdir, :id]]]]]
 

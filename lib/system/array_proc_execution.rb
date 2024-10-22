@@ -54,30 +54,8 @@ class ArrayProc < Array; end
 
 class Array
   def -@ # normalizes the array-proc form to be [fn, ...]
-    elem = self.first
-    case elem
-    in FnN
-      raise "The first element of array-proc was a FnN. That should not ever happen."
-    in Fn
-      [elem, *remaining_args]
-
-    in Df
-      fn = method_get(elem.name)
-      if (fn.is_a?(Fn) || fn.is_a?(MacFn))
-        [fn, *remaining_args]
-      else
-        self
-      end
-
-    in Symbol | String => s if s.is_a?(Symbol) || s.start_with?(":")
-      fn = method_get(elem)
-      if (fn.is_a?(Fn) || fn.is_a?(MacFn))
-        [fn, *remaining_args]
-      else
-        self
-      end
-    in Array => e if e.is_a?(ArrayProc)  # I cannot get a simple "in ArrayProc" to work
-      [~elem, *remaining_args]
+    if _fn = fn
+      [_fn, *remaining_args]
     else
       self
     end
@@ -88,6 +66,8 @@ class Array
 
     if first_elem.is_a?(Fn) || first_elem.is_a?(MacFn)
       execute_fn(first_elem, args)
+    elsif first_elem.try(:fn)&.try(:name) == :fn
+      execute_fn(~first_elem, args)
     elsif first_elem.class == ArrayProc
       execute_fn(method_get(:progn), [[first_elem, *args]])
     elsif first_elem.is_a?(Table)
@@ -98,7 +78,7 @@ class Array
   end
 
   def class
-    if length >= 1 && [Fn, MacFn, Table].include?((-self).first.class) # the first element of -[] is either Fn or Table
+    if length >= 1 && (fn || first.is_a?(Table))
       ArrayProc
     else
       super
@@ -126,8 +106,17 @@ class Array
   end
 
   def fn
-    if (the_fn = (-self).first).is_a?(Fn)
-      the_fn
+    case elem = self.first
+    in FnN
+      raise "The first element of array-proc was a FnN. That should not ever happen."
+    in Fn | MacFn
+      elem
+    in Df
+      method_get(elem.name)
+    in Symbol | String => s if s.is_a?(Symbol) || s.start_with?(":")
+      method_get(elem)
+    in Array if elem.first == :fn || elem.first&.try(:name) == :fn
+      elem
     else
       nil
     end

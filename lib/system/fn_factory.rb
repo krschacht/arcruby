@@ -154,6 +154,7 @@ core_proc = ->(klass, name, vars, o = nil, &block) {
   end
 
   vars = Array(vars)
+  vars = ~vars if vars.class == ArrayProc # parms = [:x, 1, :y, 2]; [fn, [map, car, [pair, :parms]], [prn, :x]]
   var_list = vars.map { |v| v = v.to_s; if v == "args" then "*args" else v end }.join(',')
   raise ArgumentError, "The second element must be a symbol or an array of symbols:  fn[:func, [:a, :b], ...]" unless vars.all? { |v| v.is_a?(Symbol) }
   args = vars.map { |v| v = v.to_s; if v == "args" then "*args" elsif v == "proc" then "&proc" else v end }.join(',')
@@ -163,7 +164,7 @@ core_proc = ->(klass, name, vars, o = nil, &block) {
     o = nil
   end
 
-  o = -o if o.is_a?(Array)
+  o = -o if o.is_a?(Array) # do we need to do this?
 
   raise "Using both :prc and :args in a method definition is not supported." if vars.include?(:args) && vars.include?(:proc)
   raise "When using :proc it must be the last parameter." if vars.include?(:proc) && vars.index(:proc) != vars.length-1
