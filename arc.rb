@@ -20,46 +20,18 @@
 ~[:df, :temload, [:tem, :file], [templatize, :tem, [evl, [read, :file]]]]
 ~[:df, :atom, :s, '!s.is_a?(Array)']
 
-
 # (mac with (parms . body)
 #   `((fn ,(map1 car (pair parms))
 #      ,@body)
 #     ,@(map1 cadr (pair parms))))
-
-# (mac let (var val . body)
-#   `(with (,var ,val) ,@body))
 
 ~[:mac, :with, [:parms, :args],       # ~[with, [:x, 1, :y, 2], [prn, :x]]  -- does this need to work with multiple args? I don't think so: ~[with, [:x, 1, :y, 2], [prn, :x], [prn, :y]]
   [[fn, [map, car, [pair, :parms]],
     :_args],
     [_map, cadr, [pair, :parms]]]]
 
+# (mac let (var val . body)
+#   `(with (,var ,val) ,@body))
 
-# ~[:mac, :with, [:parms, :args],
-#   [fn, [map, car, [pair, :parms]],
-#     :args],
-#     [map, cdr, [pair, :parms]]]
-
-# ~[:df, [:var, :val, :args], [with, [:var, :val], :args]]
-
-
-
-# fn[]
-# (mac each (var expr . body) `(map (fn (,var) ,@body) ,expr))
-
-
-# This map method works with two styles:
-# ~[:map, fn[[:x], 'x+1'], [1, 2, 3]]
-# ~[:df, :plusone, [:x], 'x+1']; ~[:map, plusone, [1, 2, 3]]
-# Can I make it also accept :plusone? I'd need to modify the original method definition to recognize that func is special. Or, I could make it so anytime a method takes a symbol and that symbol matches a fn to substitute.
-# ~[:map, :plusone, [1, 2, 3]]
-
-# Now I need to figure out why I can't name a function map
-
-# (each name '(Alice Bob Charlie) (prn (string "Hello " name)))
-
-# [:fn, :x, 'x + 1']
-
-
-
-# TODO: figure out why my example of eech works below but the example above doesn't work. Are 2 names not working? Or is a _name not allowed?
+~[:mac, :let, [:var, :val, :args],  # ~[let, :x, 1, [prn, :x]]
+  [with, [:var, :val], :_args]]

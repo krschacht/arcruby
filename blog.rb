@@ -96,31 +96,23 @@ require "./lib/brackets"
 
 
 
-binding.irb
 #~[dfop, :blog, :req, [prn, 'goodbye']]
 
 # TODO #1 Implement "let", it should look something like this:
-#
-# Here's a conceptual breakdown:
-#
-# (mac let (vars . body)
-#   (if (atom vars)
-#       `(with ,vars ,(car body) ,@(cdr body))  ; Single variable case
-#       `(withs ,vars ,@body)))  ; Multiple variables case
-# (atom vars): Checks if vars is a single symbol.
-# (car body): Retrieves the first element of body, which is the value to bind to vars.
-# (cdr body): Retrieves the rest of the body expressions to execute.
-# This approach allows the let macro to handle both single and multiple variable bindings by interpreting the structure of its arguments.
-#
 # TODO #2 Implement blogpage but before I can do that I need to support :@var substitution which is equiv to *array (meaning it doesn't insert an array but instead inserts the elements of an array)
-
-
-
+# ~[:df, :let, [:vars, :body],
+#   [if_true, [atom, :vars],
+#     [],
+#     [if_true]
+#     [[fn, ]]
+#     [with, :vars, [car, :body], [cdr, :body]], [withs, :vars, :body]]]
 
 # (def bsv ()
 #   (ensure-dir postdir*)
 #   (load-posts)
 #   (asv))
+
+binding.irb
 
 ~[df, :bsv, [], [progn,
   [ensure_dir, @postdir],
