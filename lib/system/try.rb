@@ -1,7 +1,7 @@
 class Object
-  def try(name)
+  def try(name, *args)
     if respond_to?(name)
-      send(name)
+      send(name, *args)
     else
       nil
     end

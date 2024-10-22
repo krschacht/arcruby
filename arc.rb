@@ -1,6 +1,7 @@
 ~[:df, :prn, :s, 'print s']
 ~[:df, :car, :lst, 'lst.first' ]
 ~[:df, :cdr, :lst, 'lst.drop(1)' ]
+~[:df, :cadr, :lst, [car, [cdr, :lst]] ]
 ~[:df, :last, :lst, 'lst.last' ]
 ~[:df, :string, :args, 'args.join' ]
 ~[:df, :int, :s, 's.to_i' ]
@@ -28,10 +29,11 @@
 # (mac let (var val . body)
 #   `(with (,var ,val) ,@body))
 
-# ~[:df, :with, [:parms, :args],
-#   [fn, [map, car, [pair, :parms]],
-#     :args],
-#     [map, cdr, [pair, :parms]]]
+~[:mac, :with, [:parms, :args],       # ~[with, [:x, 1, :y, 2], [prn, :x]]  -- does this need to work with multiple args? I don't think so: ~[with, [:x, 1, :y, 2], [prn, :x], [prn, :y]]
+  [[fn, [map, car, [pair, :parms]],
+    :_args],
+    [_map, cadr, [pair, :parms]]]]
+
 
 # ~[:mac, :with, [:parms, :args],
 #   [fn, [map, car, [pair, :parms]],

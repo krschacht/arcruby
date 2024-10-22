@@ -221,10 +221,11 @@ core_proc = ->(klass, name, vars, o = nil, &block) {
     _vars = vars
 
     s = <<-RUBY # TODO: Make var subsitute work with :"p.id"  ———  It almost works, but the .last _attr is incorrect for _attr[:cat]
-      _basevar = ->(name) { name.to_s.split('.').first }
-      _attr = ->(name) { name.to_s.split('.').last if name.to_s.include?('.') }
+      _strip_underscore = ->(name) { name.to_s.sub(/^_/, '') }
+      _basevar = ->(name) { _strip_underscore[name].split('.').first }
+      _attr = ->(name) { _strip_underscore[name].split('.').last if name.to_s.include?('.') }
       _getvar = ->(name, context) { v = context.local_variable_get(_basevar[name]) ; attr = _attr[name]; attr ? v.send(attr.to_sym) : v }
-      _vars_substitute = ->(arr, context) { arr.map { |v| v.is_a?(Array) ? _vars_substitute[v, context] : (v.is_a?(Symbol) && context.local_variables.include?(_basevar[v].to_sym) ? _getvar[v, context] : v) } }
+      _vars_substitute = ->(arr, context) { arr.flat_map { |v| v.is_a?(Array) ? [_vars_substitute[v, context]] : (v.is_a?(Symbol) && context.local_variables.include?(_basevar[v].to_sym) ? (v[0] == "_" ? _getvar[v, context] : [_getvar[v, context]]) : [v]) } }
 
       klass.new(name) { |*all|
         ->(#{args}) {
@@ -237,7 +238,11 @@ core_proc = ->(klass, name, vars, o = nil, &block) {
               _context.local_variable_set(v, all[i])
             end
           end
-          ~[ _fn, *_vars_substitute[_rest, _context] ]
+          if _fn.is_a?(ArrayProc)
+            ~[ _vars_substitute[_fn, _context], *_vars_substitute[_rest, _context] ]
+          else
+            ~[ _fn, *_vars_substitute[_rest, _context] ]
+          end
         }[*all]
       }
     RUBY
